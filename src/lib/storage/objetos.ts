@@ -122,6 +122,13 @@ export function firmarSolicitud(params: {
   };
 }
 
+/**
+ * 037 — Cuánto se espera al bucket. Uno que acepta la conexión y nunca
+ * contesta colgaría la escritura de un adjunto; con el límite, el adaptador cae
+ * al disco (spec 037, D4) en vez de dejar al cliente esperando.
+ */
+export const TIEMPO_LIMITE_MS = 15_000;
+
 export class ErrorDeBucket extends Error {
   status: number;
   constructor(mensaje: string, status: number) {
@@ -144,7 +151,12 @@ export async function ponerObjeto(
     hashDelCuerpo: sha256Hex(cuerpo),
     contentType,
   });
-  const res = await fetch(url, { method: "PUT", headers, body: new Uint8Array(cuerpo) });
+  const res = await fetch(url, {
+    method: "PUT",
+    headers,
+    body: new Uint8Array(cuerpo),
+    signal: AbortSignal.timeout(TIEMPO_LIMITE_MS),
+  });
   if (!res.ok) {
     throw new ErrorDeBucket(
       `PUT ${llave} → ${res.status}: ${(await res.text()).slice(0, 200)}`,
@@ -164,7 +176,7 @@ export async function obtenerObjeto(
     llave,
     hashDelCuerpo: SHA256_VACIO,
   });
-  const res = await fetch(url, { method: "GET", headers });
+  const res = await fetch(url, { method: "GET", headers, signal: AbortSignal.timeout(TIEMPO_LIMITE_MS) });
   if (res.status === 404) return null;
   if (!res.ok) {
     throw new ErrorDeBucket(
@@ -183,7 +195,7 @@ export async function borrarObjeto(cfg: ConfigBucket, llave: string): Promise<vo
     llave,
     hashDelCuerpo: SHA256_VACIO,
   });
-  const res = await fetch(url, { method: "DELETE", headers });
+  const res = await fetch(url, { method: "DELETE", headers, signal: AbortSignal.timeout(TIEMPO_LIMITE_MS) });
   if (!res.ok && res.status !== 404) {
     throw new ErrorDeBucket(`DELETE ${llave} → ${res.status}`, res.status);
   }

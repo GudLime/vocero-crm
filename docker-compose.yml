@@ -126,7 +126,9 @@ services:
   # MEDIA_BUCKET_KEY_ID y MEDIA_BUCKET_SECRET del .env (la secreta, 8+
   # caracteres). Los archivos viven en su volumen.
   minio:
-    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+    # La de Coolify: las imágenes oficiales de MinIO dejaron Docker Hub. Trae
+    # `mc` adentro, que usa el contenedor de abajo.
+    image: coollabsio/minio:RELEASE.2025-10-15T17-29-55Z
     profiles: ["bucket"]
     restart: unless-stopped
     command: server /data
@@ -143,7 +145,7 @@ services:
 
   # Crea el bucket una vez (si ya existe, no hace nada) y termina.
   minio-bucket:
-    image: minio/mc:RELEASE.2024-11-21T17-21-54Z
+    image: coollabsio/minio:RELEASE.2025-10-15T17-29-55Z
     profiles: ["bucket"]
     restart: "no"
     environment:

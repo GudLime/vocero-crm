@@ -118,3 +118,18 @@ fuera, como dice el issue.
 | IV Idempotencia | La llave del objeto es la ruta que ya está en la BD; escribir dos veces el mismo asset lo sobrescribe |
 | VI Spec antes de código | Este documento |
 | IX Hecho = probado en vivo | AC6 |
+
+## Decidido al implementar
+
+- **El icono usa siempre la misma llave** (`{org}/favicon`). Leer primero el
+  disco servía el icono viejo después de apagar la bandera. Por eso escribir en
+  el bucket borra la copia del disco, y escribir en disco con el bucket
+  configurado borra la del bucket. El e2e `vuelta` lo cubre.
+- **Límite de 15 s por petición al bucket**, para que uno que acepta la
+  conexión y no contesta caiga al disco (D4) en vez de colgar el envío.
+- **MinIO del compose: `coollabsio/minio`** (la de Coolify, con `mc` adentro):
+  las imágenes oficiales `minio/minio` y `minio/mc` dejaron Docker Hub.
+- **Límite conocido**: si se cambia el icono con el bucket caído, el nuevo
+  queda en disco y el bucket conserva el viejo. Al volver el bucket, se sirve
+  el viejo hasta volver a subir el icono. Resolverlo pide llaves versionadas
+  del icono; queda fuera de esta spec.
