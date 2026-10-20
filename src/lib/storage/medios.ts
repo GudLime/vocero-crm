@@ -122,6 +122,10 @@ export async function guardarMedia(
     } else {
       try {
         await ponerObjeto(cfg, llave, buf, contentType);
+        // Ya está en el bucket: se quita la copia vieja del disco, si la hay.
+        // Las llaves fijas (el icono) se sobrescriben, y al apagar la bandera
+        // se lee primero el disco: una copia vieja ahí taparía la nueva (AC3).
+        await rm(rutaEnDisco(organizationId, assetId), { force: true }).catch(() => {});
         return llave;
       } catch (err) {
         // D4: el conector falla, el adjunto no se pierde.
@@ -133,6 +137,15 @@ export async function guardarMedia(
   }
 
   await escribirEnDisco(organizationId, assetId, buf);
+
+  // Lo mismo al revés: con la bandera apagada y el bucket aún configurado, una
+  // copia vieja en el bucket taparía esta al volver a encenderla. Sin esperar
+  // (el archivo ya está a salvo en disco) y nunca en la degradación de D4,
+  // donde el bucket acaba de fallar.
+  if (!bucketPedido()) {
+    const cfg = configDelBucket();
+    if (cfg) void borrarObjeto(cfg, llave).catch(() => {});
+  }
   return llave;
 }
 

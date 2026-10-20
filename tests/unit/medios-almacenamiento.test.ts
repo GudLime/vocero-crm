@@ -137,6 +137,34 @@ describe("dónde se escribe", () => {
   });
 });
 
+describe("una llave fija (el icono) no queda tapada al mover la bandera", () => {
+  it("al escribir en el bucket, se quita la copia vieja del disco", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("", { status: 200 })));
+    const m = await montar({ MEDIA_STORE: "bucket", ...CREDS });
+    await mkdir(path.join(dirTemporal, "org_1"), { recursive: true });
+    await writeFile(path.join(dirTemporal, "org_1", "favicon"), "icono viejo");
+
+    await m.guardarMedia("org_1", "favicon", Buffer.from("icono nuevo"));
+
+    await expect(readFile(path.join(dirTemporal, "org_1", "favicon"))).rejects.toThrow();
+  });
+
+  it("al escribir en disco con el bucket configurado, se borra la copia del bucket", async () => {
+    const llamadas: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (u: string, init?: RequestInit) => {
+        llamadas.push(`${init?.method} ${u}`);
+        return new Response("", { status: 204 });
+      })
+    );
+    const m = await montar({ MEDIA_STORE: "disco", ...CREDS });
+    await m.guardarMedia("org_1", "favicon", Buffer.from("icono nuevo"));
+    expect(await readFile(path.join(dirTemporal, "org_1", "favicon"), "utf8")).toBe("icono nuevo");
+    expect(llamadas).toEqual(["DELETE https://cuenta123.r2.cloudflarestorage.com/vocero-media/org_1/favicon"]);
+  });
+});
+
 describe("la lectura mira en los DOS sitios", () => {
   it("con el bucket encendido, un archivo viejo del disco se sigue leyendo", async () => {
     // 404 en el bucket: el archivo es de antes de migrar.
