@@ -1134,3 +1134,43 @@ así que hoy ningún cerebro puede mover etapas.
 
 Que Kevin revise y mergee #130 y nea-agent#47. Después, #93 (almacenamiento),
 el tag 2.0.0 (que quita el perfil `nea` del compose) y el starter 3.0.0.
+
+## 2026-10-20 — 038: el cerebro mueve la etapa
+
+Rama `feat/038-cerebro-mueve-etapa` y nea-agent `feat/038-mover-etapa`. Sale
+del «cambio de producto a revisar» de la 036: con el agente incluido se fue
+`move_stage` y ningún cerebro podía mover etapas. La 037 queda para la #93.
+
+### Qué quedó
+
+- `POST /api/bot/stage {conversationId, stage}` (nombre o id). Solo hacia
+  adelante y a etapas abiertas: ganar o perder lo decide una persona. Misma
+  etapa = 200 `changed: false`, sin evento. Pasa por `moveLeadToStage` con
+  `source = "bot"`.
+- Errores tipados: 409 `etapa_no_permitida`, `herramienta_apagada` y
+  `ai_paused`; 422 `etapa_desconocida`; 404 `sin_lead`. Los de etapa traen
+  las válidas en el mensaje.
+- `GET /api/bot/context` gana `lead.nextStages`: va en el contexto y no en el
+  perfil porque depende de la etapa de ese momento.
+- Herramienta nueva `etapa` («Mover de etapa») en el catálogo del rol. El CRM
+  la hace cumplir. Encendida donde «todas» es el valor (`tools = null`, preset
+  Calificador); un perfil con lista elegida a mano la recibe apagada.
+- Corrige la 034 D1: la ficha nunca movía la etapa. La descripción de
+  `/api/bot/ficha` en el OpenAPI decía que sí; ya no.
+- Nea: herramienta `move_stage`, que solo aparece con la clave encendida y
+  `nextStages` en el contexto. Contra cloud o un raíz anterior no existe.
+
+### Cómo se probó
+
+| Qué | Resultado |
+|---|---|
+| CRM: `typecheck`, `lint`, `test`, `build` | Verdes; 1,151 unitarias (nuevas: `bot-etapa` 14) |
+| E2E `scripts/e2e-etapa.mjs` (cerebro falso: lee el contexto y mueve) | 31/31 |
+| Regresión: `e2e-despacho` (cerebro falso tocado) y `e2e-roles` (catálogo nuevo) | despacho 134/134, roles 15/15 (en una base limpia: el registro se cierra tras la primera organización) |
+| Nea: `pytest` | 515 verdes (7 nuevas); la del PDF falla solo en Windows, igual que en `main` |
+
+### En vivo
+
+Pendiente de verificación humana: otra sesión usa el número Soporte y
+`vocero20`. Hay que coordinar la prueba (un DM que califique y ver la tarjeta
+moverse en el Pipeline).
