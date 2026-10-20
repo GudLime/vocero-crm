@@ -1,7 +1,7 @@
 import { withAuth } from "@/lib/api";
 import { getDb, schema } from "@/lib/db";
 import { scoped } from "@/lib/db/tenant";
-import { getEnv } from "@/lib/env";
+import { urlSaludCerebro } from "@/server/brains/config";
 import { isAiConfiguredFor } from "@/lib/ai/provider";
 import { isBotKeyConfigured } from "@/server/bot/auth";
 import {
@@ -25,7 +25,7 @@ export const GET = withAuth(async (session) => {
       .from(schema.agentProfile)
       .where(scoped(schema.agentProfile.organizationId, session.organizationId))
       .limit(1),
-    getBrainHealth(getEnv().BRAIN_HEALTH_URL),
+    getBrainHealth(urlSaludCerebro() ?? undefined),
     isAiConfiguredFor(session.organizationId),
     estadoDelDespacho(session.organizationId),
   ]);

@@ -59,3 +59,16 @@ export function leerConfigDespacho(env: Entorno = process.env): ConfigDespacho {
 export function despachoActivo(): boolean {
   return leerConfigDespacho().active;
 }
+
+/**
+ * 036 — A dónde preguntarle al cerebro si está sano: `BRAIN_HEALTH_URL` o, sin
+ * ella, el `/health` del mismo origen del despacho (lo que sirve Nea). `null`
+ * si no hay ninguna de las dos.
+ */
+export function urlSaludCerebro(env: Entorno = process.env): string | null {
+  const directa = env.BRAIN_HEALTH_URL?.trim();
+  if (directa) return directa;
+  const despacho = leerConfigDespacho(env);
+  if (!despacho.active) return null;
+  return new URL("/health", despacho.url).toString();
+}
