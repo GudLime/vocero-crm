@@ -63,16 +63,23 @@ Lo que 2.0 añadió queda listado como cambio de contrato: `adOrigen`,
 **D5 — «Recuperar el webhook» en Ajustes → WhatsApp.** Cuando el registro se
 saltó por un override ajeno en la WABA (`skipped: "waba_override"`), la
 tarjeta del webhook ofrece recuperarlo. `POST /api/settings/webhook` con
-`{"recuperar": true}` registra el override del **número** hacia el CRM sin
-mirar el de la WABA (el del número tiene prioridad) y sin re-suscribir la app
-(eso borraría el de la WABA, que no es del CRM). Solo quien administra; la
-pantalla dice antes quién deja de recibir.
+`{"recuperar": true}` **quita el override ajeno de la WABA** (re-suscribe la
+app sin cuerpo, que es como Meta lo borra) y registra el del número hacia el
+CRM. Solo quien administra; la pantalla dice antes quién deja de recibir.
+*Decidido al implementar:* la primera versión dejaba el de la WABA intacto,
+y el e2e mostró que el siguiente «Guardar» lo veía y quitaba el del número
+recién recuperado (la regla que protege a una agencia). Quitar el de la WABA
+es lo que hace que la recuperación dure.
 
 **D6 — El compose levanta el par.** `docker-compose.yml` suma el servicio
 `nea` (`ghcr.io/kevinrivm/nea-agent:${NEA_VERSION:-2.0.0}`) sobre la **misma
 base**, en su esquema `nea`. El CRM despacha a `http://nea:8000` por defecto y
 le lee el `/health`. Nea pide su llave de IA (`LLM_API_KEY`) hasta que la #106
-la mueva al CRM. `render.yaml` gana el segundo servicio; en Fly y Railway, que
+la mueva al CRM. *Decidido al implementar:* mientras la imagen de Nea 2.0.0
+no esté publicada, el servicio va detrás del perfil `nea`
+(`docker compose --profile nea up -d`) y el bloque de Render va comentado:
+con la imagen por defecto, un `git pull && docker compose up` desde `main`
+antes del cierre fallaría. En el cierre de la 2.0 se quita el perfil. `render.yaml` gana el segundo servicio; en Fly y Railway, que
 despliegan una app por manifiesto, los comentarios dicen cómo levantar a Nea
 al lado.
 
@@ -92,11 +99,12 @@ el cierre de la 2.0 (starter 3.0.0); el retiro del agente incluido es la #106.
   ejemplos son los cuerpos gemelos; borrar una ruta o cambiar el cuerpo gemelo
   pone la prueba en rojo.
 - **AC3** — «Recuperar el webhook»: con un override ajeno en la WABA (wa-mock),
-  el registro normal se salta; recuperarlo deja el del número hacia el CRM, no
-  toca el de la WABA y un miembro del equipo recibe 403.
-- **AC4** — `docker compose config` válido con los dos servicios; el CRM con
-  `BRAIN_DISPATCH_URL=http://nea:8000/vocero/dispatch` y Nea con
-  `DATABASE_SCHEMA=nea` sobre la misma base.
+  el registro normal se salta; recuperarlo quita el de la WABA y deja el del
+  número hacia el CRM; un «Guardar» posterior no lo deshace; un miembro del
+  equipo recibe 403.
+- **AC4** — `docker compose --profile nea config` válido con los dos
+  servicios (Nea con `DATABASE_SCHEMA=nea` sobre la misma base y
+  `CRM_BASE_URL=http://app:3000`), y sin el perfil, el compose de siempre.
 - **AC5** — Gates verdes; `manifests-plataformas` en verde.
 - **AC6** — En vivo: `vocero20` sirve el OpenAPI; y «Recuperar el webhook» en
   una prueba con el número «Soporte», devolviendo el override al terminar.
