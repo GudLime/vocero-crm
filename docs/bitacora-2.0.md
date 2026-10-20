@@ -885,8 +885,8 @@ la lista de permitidos; luego #91 (Laboratorio por contrato).
 ## 2026-10-20 — 032: el seguimiento y el reintento respetan `ALLOWED_WA_IDS`
 
 PR: [nea-agent#44](https://github.com/kevinrivm/nea-agent/pull/44), rama
-`fix/032-seguimiento-permitidos`, cortada de `feat/031-nea-por-despacho`
-(nea-agent#43 sigue abierto: va primero). Spec de carril ligero en
+`fix/032-seguimiento-permitidos`, sobre `main` (ya con la 031 mergeada).
+Spec de carril ligero en
 `specs/032-seguimiento-permitidos/spec.md` (rama
 `docs/032-seguimiento-permitidos` de este repo), escrita antes del código.
 **Abierto, sin mergear.**
@@ -913,4 +913,4 @@ PR: [nea-agent#44](https://github.com/kevinrivm/nea-agent/pull/44), rama
 
 ### Qué sigue
 
-Que Kevin mergee nea-agent#43 y luego #44.
+Que Kevin revise y mergee nea-agent#44 y #126.
