@@ -14,8 +14,9 @@ import { estadoDelDespacho } from "@/server/dispatch/estado";
 export const dynamic = "force-dynamic";
 
 /**
- * «Quién responde a tus clientes»: el agente incluido, el cerebro externo,
- * el despacho (021) y el aviso de doble respuesta. Ver `server/bot/status.ts`.
+ * «Quién responde a tus clientes»: el cerebro conectado, el despacho (021), el
+ * interruptor y los avisos `sin_cerebro` y `apagado` (036). Ver
+ * `server/bot/status.ts`.
  */
 export const GET = withAuth(async (session) => {
   const db = getDb();
