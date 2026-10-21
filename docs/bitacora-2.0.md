@@ -1252,3 +1252,20 @@ la menciona y el e2e con el cerebro falso lo cubre. Lo que falla es que el
 modelo (`openai/gpt-4o-mini`) no la usa con la instrucción actual («cuando la
 conversación lo amerite»). No se mergeó: la decisión de cómo instruirlo es de
 Kevin.
+
+**Repetición con `z-ai/glm-5.3-flash`** (2026-10-21). El modelo anterior era
+el `LLM_MODEL` de la bóveda, `openai/gpt-4o-mini`, copiado sin compararlo con
+el `.env.example`; Kevin pidió GLM. Se cambiaron Ajustes → IA de `vocero20`
+(llave `…09bd` activa; «Probar conexión» en 2.6 s), el `LLM_MODEL` de
+respaldo de Nea en el servicio y el `LLM_MODEL` de la bóveda. Nea se
+redesplegó para empezar sin perfil en caché.
+
+| | UTC | Resultado |
+|---|---|---|
+| Override movido / devuelto | 00:49:02 / 00:52:09 | Los mismos dos mensajes. «pienso con z-ai/glm-5.3-flash». En el 1.º, respuesta en 20.1 s sin herramientas. En el 2.º, `GET /api/bot/availability` y `PUT /api/bot/ficha`, respuesta en 41.1 s. Ninguna llamada a `POST /api/bot/stage`. El lead siguió en «Nuevo» |
+
+**Sigue sin pasar, ahora con dos modelos.** GLM usa otras herramientas
+(horarios, ficha) y aun así nunca llama `move_stage`. Por eso no se descarta
+que la herramienta no le llegue al modelo, además de una instrucción floja.
+Siguiente paso: reproducir fuera de Soporte, con Nea local contra el CRM local
+y GLM real, registrando el catálogo que se le manda al modelo. No se mergeó.
