@@ -1230,3 +1230,25 @@ del «cambio de producto a revisar» de la 036: con el agente incluido se fue
 Pendiente de verificación humana: otra sesión usa el número Soporte y
 `vocero20`. Hay que coordinar la prueba (un DM que califique y ver la tarjeta
 moverse en el Pipeline).
+
+### En vivo (`vocero20`: CRM y Nea `2.0.0-rc.9`), 2026-10-21
+
+Antes de la prueba, la rama se puso al día con `main` (que ya traía la 037):
+el único choque fue la bitácora. Con `ops/vivo-038.mjs preparar` se encendió
+`etapa` en `vocero20`. Su lista de herramientas venía elegida a mano y por eso
+la recibió apagada, como dice D3. El lead de la línea cliente estaba en
+«Nuevo», con «En conversación» e «Interesado» como siguientes abiertas.
+
+| | UTC | Resultado |
+|---|---|---|
+| Override movido / devuelto (1) | 00:36:25 / 00:38:00 | «Me interesa contratarlos, ¿cómo le hacemos para empezar?» → Nea contestó en 12.1 s con una sola llamada al modelo y ninguna herramienta. El lead siguió en «Nuevo» |
+| Override movido / devuelto (2) | 00:38:44 / 00:40:18 | «Lo quiero para mi consultorio dental y me gustaría empezar la próxima semana» → Nea guardó la ficha (`PUT /api/bot/ficha`) y contestó en 12.7 s, pero no llamó `move_stage`. El lead siguió en «Nuevo» |
+
+Dos mensajes de la línea cliente; Soporte quedó como estaba.
+
+**Resultado: no pasa.** La mecánica responde como debe: el contexto trae
+`nextStages`, Nea arma `move_stage` con la herramienta encendida, el prompt
+la menciona y el e2e con el cerebro falso lo cubre. Lo que falla es que el
+modelo (`openai/gpt-4o-mini`) no la usa con la instrucción actual («cuando la
+conversación lo amerite»). No se mergeó: la decisión de cómo instruirlo es de
+Kevin.
