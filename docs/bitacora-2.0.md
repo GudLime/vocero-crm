@@ -1269,3 +1269,26 @@ redesplegó para empezar sin perfil en caché.
 que la herramienta no le llegue al modelo, además de una instrucción floja.
 Siguiente paso: reproducir fuera de Soporte, con Nea local contra el CRM local
 y GLM real, registrando el catálogo que se le manda al modelo. No se mergeó.
+
+**Diagnóstico local y arreglo** (2026-10-21). Se reprodujo en local: el CRM y
+Nea de las dos ramas, GLM real y un proxy de registro entre el CRM y
+OpenRouter (sin la llave en los registros). `move_stage` sí iba en las
+herramientas, y la línea del prompt también; el contexto traía `nextStages`
+bien. Lo que fallaba era la instrucción: «cuando la conversación lo amerite»
+no le daba al modelo ningún criterio. Arreglo en Nea (`4161f1d`):
+- La línea del prompt y la descripción de la herramienta dicen cuándo mover:
+  en el mismo turno de la respuesta, en cuanto el lead dijo qué necesita o
+  pidió avanzar (precio, contratar, empezar, agendar).
+- También dicen cuándo no: un saludo, un «ok» o una duda suelta.
+- Prueba nueva: `test_dice_cuando_mover_no_solo_que_se_puede`.
+
+En local, con GLM: mueve con los dos mensajes de la prueba y no mueve con
+«Hola, ¿qué tal?». El CRM no cambió.
+
+**En vivo otra vez** (CRM `rc.9`, Nea `rc.10` = `4161f1d`):
+
+| | UTC | Resultado |
+|---|---|---|
+| Override movido / devuelto | 03:09:26 / 03:09:44 | «Me interesa contratarlos, ¿cómo le hacemos para empezar?» → respuesta en 16.0 s y el lead pasó de «Nuevo» a «Interesado» |
+
+Un mensaje de la línea cliente. Soporte quedó como estaba. **Pasa.**
