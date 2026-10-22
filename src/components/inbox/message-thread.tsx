@@ -16,6 +16,7 @@ import {
 import type { MessageDto, MessageMediaDto } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { formatBytes, mediaLabel } from "./helpers";
+import { LinkedText } from "./linked-text";
 
 function StatusTicks({ status }: { status: MessageDto["status"] }) {
   const cls = "h-[13px] w-[13px]";
@@ -239,13 +240,13 @@ export function MessageThread({ messages }: { messages: MessageDto[] }) {
                     <MediaBlock media={m.media} />
                     {m.media.caption && (
                       <span className="mt-1 block whitespace-pre-wrap break-words">
-                        {m.media.caption}
+                        <LinkedText text={m.media.caption} />
                       </span>
                     )}
                   </span>
                 ) : m.type === "text" || m.type === "template" ? (
                   <span className="whitespace-pre-wrap break-words">
-                    {m.text}
+                    <LinkedText text={m.text} />
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1.5 text-text-3">
