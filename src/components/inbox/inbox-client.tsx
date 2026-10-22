@@ -400,7 +400,17 @@ export function InboxClient({
                 </button>
               )}
             </header>
-            <MessageThread messages={thread} />
+            <MessageThread
+              // 042: el aviso «Imagen reenviada a…» es de esta conversación.
+              // Prefijo propio: el Composer hermano ya usa `selected.id`.
+              key={`hilo-${selected.id}`}
+              messages={thread}
+              conversations={conversations ?? []}
+              onForwarded={() => {
+                if (selectedIdRef.current) void refetchMessages(selectedIdRef.current);
+                void refetchConversations();
+              }}
+            />
             <Composer
               // 028: uno por conversación. Sin la llave, el borrador, el adjunto
               // elegido y el panel abierto pasaban a la siguiente conversación.

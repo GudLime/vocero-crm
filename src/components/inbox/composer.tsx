@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { CHANNEL_LABEL } from "@/lib/channels";
 import { formatBytes, formatRemaining, formatRemainingLong } from "./helpers";
 import { TemplateSender } from "./template-sender";
+import { validarImagenAdjunta } from "@/lib/imagen-adjunta";
 
 /** 008 — Panel secundario del clip: formulario de ubicación o contacto. */
 type AttachPanel = "location" | "contact" | null;
@@ -54,6 +55,8 @@ export function Composer({
   const [contactPhone, setContactPhone] = useState("");
   const taRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  // 042 — `sending` tarda un render en verse; esto corta el doble envío ya.
+  const mediaSending = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -91,11 +94,34 @@ export function Composer({
     setError(null);
   }
 
+  /** 042 — Una imagen del portapapeles: se valida aquí y queda como adjunto. */
+  function attachImage(files: File[]) {
+    if (sending || mediaSending.current) return;
+    if (!conversation.composer.media) {
+      setError(`Pegar imágenes está disponible en WhatsApp; ${CHANNEL_LABEL[conversation.channel]} no admite adjuntos.`);
+      return;
+    }
+    const result = validarImagenAdjunta(files, "paste");
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    pickFile(result.file);
+    taRef.current?.focus();
+  }
+
   async function apiSend(path: string, init: RequestInit): Promise<string | null> {
-    const res = await fetch(path, init);
-    if (res.ok) return null;
-    const data = (await res.json().catch(() => null)) as { message?: string } | null;
-    return data?.message ?? `Error ${res.status}`;
+    try {
+      const res = await fetch(path, init);
+      if (res.ok) return null;
+      // apiError responde `{ error: { code, message } }`.
+      const data = (await res.json().catch(() => null)) as {
+        error?: { message?: string };
+      } | null;
+      return data?.error?.message ?? `Error ${res.status}`;
+    } catch {
+      return "No se pudo conectar con el servidor. Lo que ibas a mandar sigue aquí para reintentar.";
+    }
   }
 
   async function submit() {
@@ -104,7 +130,8 @@ export function Composer({
     if (file) {
       // El adjunto sí espera: sube el archivo y no tiene sentido encolar otro
       // mientras tanto.
-      if (sending) return;
+      if (mediaSending.current) return;
+      mediaSending.current = true;
       setSending(true);
       const form = new FormData();
       form.set("file", file);
@@ -115,6 +142,7 @@ export function Composer({
         { method: "POST", body: form }
       );
       setSending(false);
+      mediaSending.current = false;
       if (err) {
         setError(err);
         return;
@@ -322,6 +350,7 @@ export function Composer({
           </div>
           <button
             onClick={() => pickFile(null)}
+            disabled={sending}
             aria-label="Quitar adjunto"
             className="rounded p-1 text-text-3 hover:bg-secondary hover:text-foreground"
           >
@@ -410,7 +439,12 @@ export function Composer({
           ref={fileRef}
           type="file"
           className="hidden"
-          onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
+          disabled={sending}
+          onChange={(e) => {
+            if (!sending) pickFile(e.target.files?.[0] ?? null);
+            // Elegir el mismo archivo otra vez también avisa.
+            e.target.value = "";
+          }}
         />
         {/* 028: solo lo que el canal puede mandar; en las redes, la caja sola. */}
         {(conversation.composer.media || conversation.composer.structured) && (
@@ -418,6 +452,7 @@ export function Composer({
             {conversation.composer.media && (
               <button
                 onClick={() => fileRef.current?.click()}
+                disabled={sending}
                 aria-label="Adjuntar archivo"
                 title="Adjuntar imagen, video, audio o documento"
                 className="rounded p-1.5 text-text-3 transition-colors hover:bg-secondary hover:text-foreground"
@@ -458,6 +493,19 @@ export function Composer({
           placeholder={file ? "Pie del adjunto (opcional)…" : "Escribe una respuesta…"}
           value={text}
           rows={1}
+          onPaste={(e) => {
+            const images = Array.from(e.clipboardData.items).filter(
+              (item) => item.kind === "file" && item.type.startsWith("image/")
+            );
+            if (images.length === 0) return; // texto: el pegado de siempre
+            e.preventDefault();
+            const files = images.map((item) => item.getAsFile());
+            if (files.some((f) => !f)) {
+              setError("No se pudo leer la imagen del portapapeles. Cópiala de nuevo.");
+              return;
+            }
+            attachImage(files as File[]);
+          }}
           onChange={(e) => {
             setText(e.target.value);
             autogrow();
@@ -483,7 +531,13 @@ export function Composer({
         </button>
       </div>
       <div className="mt-1.5 flex items-center justify-between">
-        {error ? <p className="text-xs text-destructive">{error}</p> : <span />}
+        {error ? (
+          <p role="alert" className="text-xs text-destructive">
+            {error}
+          </p>
+        ) : (
+          <span />
+        )}
         <p className="font-mono text-[10.5px] tracking-[0.04em] text-text-3">
           {soloPersona
             ? `Ventana humana · quedan ${formatRemainingLong(human!.remainingMs)}`
