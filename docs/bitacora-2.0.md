@@ -1446,3 +1446,49 @@ maestra y como zip, igual que la 2.2.0 y la 2.3.0.
 `oxscyojlwrwvhvookx8ikd8c`, CRM `dpmhlzuxtcwfnr6jkinra2o6` y Postgres
 `e5bjsmt2ahbzc7pkfkldnmud`). El borrado por el MCP pidió confirmación y quedó
 rechazado; queda pendiente de Kevin, que puede hacerlo desde el panel.
+
+## 2026-10-22 — 042: pegar y reenviar imágenes en WhatsApp
+
+**PR**: [#141](https://github.com/kevinrivm/vocero-crm/pull/141), rama
+`042-pegar-reenviar-imagenes`. Spec ligera antes del código (`81d4625`).
+Puerto de una función que ya usa un CRM de cliente; se volvió a montar sobre
+la 2.0 y el almacenamiento de la 037.
+
+### Qué quedó
+
+- Pegar una imagen en el campo la deja como adjunto; validación compartida en
+  `src/lib/imagen-adjunta.ts`, atada a `MEDIA_LIMITS.image`.
+- «Reenviar imagen» en el hilo y su diálogo; ruta interna
+  `POST /api/conversations/[id]/messages/forward-image` que solo nombra el
+  mensaje de origen.
+- **Diferencias con el CRM de origen, decididas aquí**: los destinos y la
+  ruta van por la capacidad del canal (`outboundMedia` / `composer.media`), no
+  por el nombre «whatsapp»; el binario se lee con `readMediaFile` (disco o
+  bucket); una imagen entrante que no se había bajado se baja en vez de
+  rechazarse, y por eso el botón aparece en toda imagen.
+- Se corrigió de paso el compositor: leía mal el error de la API y decía
+  «Error 413» en vez del motivo.
+- Se encontró y corrigió al probar: el hilo y el compositor, hermanos, tenían
+  la misma `key` (el origen la traía igual). El arnés ahora falla con avisos
+  de React de llaves repetidas.
+
+### Cómo se probó
+
+| Qué | Resultado |
+|---|---|
+| `typecheck`, `lint`, `test`, `build` | Verdes con banderas apagadas y con `CHANNELS` + `AGENDA`. 1 202 unitarias (27 nuevas) |
+| `scripts/e2e-imagenes.mjs` (Playwright, wa-mock, base desechable) | 42/42 |
+| `scripts/e2e-selftest.mjs` con el cerebro falso y todo encendido | 280/280 |
+| Capturas del hilo y del diálogo, escritorio, tema claro | Revisadas a ojo |
+
+### Qué no se probó
+
+- **`MEDIA_STORE=bucket`**: el E2E corrió con disco. La lectura pasa por
+  `readMediaFile`, que la 037 ya prueba con los dos almacenes, pero el reenvío
+  desde un bucket no se ejercitó.
+- **Destino de Instagram, Messenger o TikTok** en la UI: crear esa
+  conversación exige conectar Zernio; el 422 lo cubre la unitaria.
+- **Tema oscuro** del diálogo, a ojo.
+- **En vivo**, con un número real: no se tocó ningún WhatsApp ni ninguna
+  instancia. Pendiente de verificación humana (pegar una captura y reenviar
+  una foto de un cliente a otro, y verlas llegar al teléfono).
