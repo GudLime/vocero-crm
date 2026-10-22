@@ -103,7 +103,6 @@ export function Composer({
     };
   }, []);
 
-<<<<<<< HEAD
   // 039: al elegir «Responder» se escribe ya, sin buscar el campo.
   useEffect(() => {
     if (replyTo) taRef.current?.focus();
