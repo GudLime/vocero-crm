@@ -28,6 +28,8 @@ const SEND_ERROR_STATUS: Record<SendError["code"], number> = {
   meta_error: 422,
   meta_unavailable: 503,
   upload_failed: 502,
+  // 039: el reenvío nunca cita, pero el mapa cubre todo `SendError`.
+  reply_unavailable: 422,
 };
 
 /**

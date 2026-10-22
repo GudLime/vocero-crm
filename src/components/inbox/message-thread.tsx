@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
   Check,
@@ -10,6 +10,7 @@ import {
   Forward,
   MapPin,
   Paperclip,
+  Reply,
   Smartphone,
   Sparkles,
   UserRound,
@@ -18,6 +19,8 @@ import type { ConversationDto, MessageDto, MessageMediaDto } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { formatBytes, mediaLabel } from "./helpers";
 import { ForwardImageDialog } from "./forward-image-dialog";
+import { LinkedText } from "./linked-text";
+import { QuoteBlock } from "./quote-block";
 
 function StatusTicks({ status }: { status: MessageDto["status"] }) {
   const cls = "h-[13px] w-[13px]";
@@ -186,10 +189,16 @@ function bubbleTime(iso: string): string {
 
 export function MessageThread({
   messages,
+  contactName,
+  onReply,
   conversations = [],
   onForwarded,
 }: {
   messages: MessageDto[];
+  /** 039: quién firma las citas del cliente. */
+  contactName: string;
+  /** 039: presente solo si el canal permite responder citando. */
+  onReply?: (m: MessageDto) => void;
   /** 042 — Destinos posibles del reenvío; sin `onForwarded` no se ofrece. */
   conversations?: ConversationDto[];
   onForwarded?: () => void;
@@ -197,6 +206,27 @@ export function MessageThread({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [forwarding, setForwarding] = useState<MessageDto | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [resaltado, setResaltado] = useState<string | null>(null);
+  const resaltadoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // 039: el clic en una cita lleva al original y lo resalta un momento.
+  const irAlCitado = useCallback((id: string) => {
+    const el = scrollRef.current?.querySelector<HTMLElement>(
+      `[data-message-id="${CSS.escape(id)}"]`
+    );
+    if (!el) return;
+    el.scrollIntoView({ block: "center", behavior: "smooth" });
+    setResaltado(id);
+    if (resaltadoTimer.current) clearTimeout(resaltadoTimer.current);
+    resaltadoTimer.current = setTimeout(() => setResaltado(null), 1600);
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (resaltadoTimer.current) clearTimeout(resaltadoTimer.current);
+    },
+    []
+  );
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -241,12 +271,13 @@ export function MessageThread({
             )}
             <div
               className={cn(
-                "flex",
-                out ? "justify-end" : "justify-start",
+                "group flex items-center gap-1",
+                out ? "flex-row-reverse" : "flex-row",
                 grouped ? "mt-[3px]" : "mt-2.5"
               )}
             >
               <div
+                data-message-id={m.id}
                 className={cn(
                   // En el teléfono la burbuja necesita casi todo el renglón:
                   // con 64% cada mensaje se parte en tres líneas.
@@ -256,15 +287,24 @@ export function MessageThread({
                   out
                     ? "border-bubble-out-border bg-bubble-out text-bubble-out-text"
                     : "border-bubble-in-border bg-bubble-in",
-                  !grouped && (out ? "rounded-tr-[5px]" : "rounded-tl-[5px]")
+                  !grouped && (out ? "rounded-tr-[5px]" : "rounded-tl-[5px]"),
+                  resaltado === m.id && "ring-2 ring-brand"
                 )}
               >
+                {m.replyTo && (
+                  <QuoteBlock
+                    cita={m.replyTo}
+                    contactName={contactName}
+                    onJump={irAlCitado}
+                    className="mb-1.5"
+                  />
+                )}
                 {m.media ? (
                   <span className="block">
                     <MediaBlock media={m.media} />
                     {m.media.caption && (
                       <span className="mt-1 block whitespace-pre-wrap break-words">
-                        {m.media.caption}
+                        <LinkedText text={m.media.caption} />
                       </span>
                     )}
                     {/* Aunque la descarga haya fallado: el servidor la reintenta (042 · D4). */}
@@ -283,7 +323,7 @@ export function MessageThread({
                   </span>
                 ) : m.type === "text" || m.type === "template" ? (
                   <span className="whitespace-pre-wrap break-words">
-                    {m.text}
+                    <LinkedText text={m.text} />
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1.5 text-text-3">
@@ -329,6 +369,18 @@ export function MessageThread({
                   </p>
                 )}
               </div>
+              {onReply && m.quotable && (
+                // En el teléfono no hay "pasar el ratón": ahí se ve siempre.
+                <button
+                  type="button"
+                  onClick={() => onReply(m)}
+                  aria-label="Responder"
+                  title="Responder"
+                  className="shrink-0 rounded-full p-1.5 text-text-3 transition-opacity hover:bg-secondary hover:text-foreground focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                >
+                  <Reply className="h-4 w-4" strokeWidth={1.7} />
+                </button>
+              )}
             </div>
           </div>
         );

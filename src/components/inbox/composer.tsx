@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   Clock3,
   FileText,
@@ -10,12 +10,20 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import type { ConversationDto, TemplateDto } from "@/lib/types";
+import type { ConversationDto, MessageDto, TemplateDto } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { CHANNEL_LABEL } from "@/lib/channels";
-import { formatBytes, formatRemaining, formatRemainingLong } from "./helpers";
+import {
+  citaDe,
+  formatBytes,
+  formatRemaining,
+  formatRemainingLong,
+} from "./helpers";
+import { QuoteBlock } from "./quote-block";
 import { TemplateSender } from "./template-sender";
 import { validarImagenAdjunta } from "@/lib/imagen-adjunta";
+import { EmojiPicker } from "./emoji-picker";
+import { insertAtSelection } from "@/lib/emojis";
 
 /** 008 — Panel secundario del clip: formulario de ubicación o contacto. */
 type AttachPanel = "location" | "contact" | null;
@@ -37,10 +45,15 @@ export function Composer({
   conversation,
   onSend,
   onSent,
+  replyTo = null,
+  onReplyChange,
 }: {
   conversation: ConversationDto;
-  onSend: (text: string) => Promise<string | null>;
+  onSend: (text: string, replyTo: MessageDto | null) => Promise<string | null>;
   onSent: () => void;
+  /** 039: el mensaje al que se está respondiendo citando, si hay. */
+  replyTo?: MessageDto | null;
+  onReplyChange?: (m: MessageDto | null) => void;
 }) {
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
@@ -57,6 +70,8 @@ export function Composer({
   const fileRef = useRef<HTMLInputElement>(null);
   // 042 — `sending` tarda un render en verse; esto corta el doble envío ya.
   const mediaSending = useRef(false);
+  // 041 — Dónde dejar el cursor cuando el texto con el emoji ya se pintó.
+  const emojiCaret = useRef<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -72,6 +87,14 @@ export function Composer({
     };
   }, []);
 
+  // 039: al elegir «Responder» se escribe ya, sin buscar el campo.
+  useEffect(() => {
+    if (replyTo) taRef.current?.focus();
+  }, [replyTo]);
+
+  /** 039: el id citado, para los envíos que esperan respuesta del servidor. */
+  const replyField = replyTo ? { replyToMessageId: replyTo.id } : {};
+
   // La URL del preview de imagen se libera al reemplazar/limpiar el archivo.
   useEffect(() => {
     return () => {
@@ -79,11 +102,36 @@ export function Composer({
     };
   }, [filePreview]);
 
+  useLayoutEffect(() => {
+    const el = taRef.current;
+    if (!el || emojiCaret.current === null) return;
+    el.focus();
+    el.setSelectionRange(emojiCaret.current, emojiCaret.current);
+    emojiCaret.current = null;
+    autogrow();
+  }, [text]);
+
   function autogrow() {
     const el = taRef.current;
     if (!el) return;
     el.style.height = "auto";
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+  }
+
+  /** 041 — El emoji entra en el cursor (o en lugar de la selección); no envía. */
+  function insertEmoji(emoji: string) {
+    const el = taRef.current;
+    if (!el || sending) return;
+    const next = insertAtSelection(text, el.selectionStart, el.selectionEnd, emoji);
+    if (next.text === text) {
+      // Reemplazar un emoji por el mismo no cambia el texto ni dispara el
+      // efecto: el cursor se coloca aquí.
+      el.focus();
+      el.setSelectionRange(next.caret, next.caret);
+      return;
+    }
+    emojiCaret.current = next.caret;
+    setText(next.text);
   }
 
   function pickFile(f: File | null) {
@@ -137,6 +185,7 @@ export function Composer({
       form.set("file", file);
       const caption = text.trim();
       if (caption) form.set("caption", caption);
+      if (replyTo) form.set("replyToMessageId", replyTo.id);
       const err = await apiSend(
         `/api/conversations/${conversation.id}/messages/media`,
         { method: "POST", body: form }
@@ -150,6 +199,7 @@ export function Composer({
       pickFile(null);
       setText("");
       if (taRef.current) taRef.current.style.height = "auto";
+      onReplyChange?.(null);
       onSent();
       return;
     }
@@ -162,9 +212,13 @@ export function Composer({
     // "enviando" del hilo es la que informa el estado real.
     setText("");
     if (taRef.current) taRef.current.style.height = "auto";
-    const err = await onSend(value);
+    const cita = replyTo;
+    onReplyChange?.(null);
+    const err = await onSend(value, cita);
     if (err) {
       setError(err);
+      // 039: la cita vuelve con el texto.
+      if (cita) onReplyChange?.(cita);
       // Lo que no salió vuelve al campo. Si ya empezaste a escribir otra cosa
       // se antepone en vez de pisarte: nada se pierde en silencio.
       setText((actual) => (actual ? `${value}\n${actual}` : value));
@@ -187,6 +241,7 @@ export function Composer({
       body: JSON.stringify({
         type: "location",
         location: { ...coords, ...(placeName.trim() ? { name: placeName.trim() } : {}) },
+        ...replyField,
       }),
     });
     setSending(false);
@@ -197,6 +252,7 @@ export function Composer({
     setPanel(null);
     setCoordsRaw("");
     setPlaceName("");
+    onReplyChange?.(null);
     onSent();
   }
 
@@ -213,6 +269,7 @@ export function Composer({
       body: JSON.stringify({
         type: "contacts",
         contacts: [{ name: contactName.trim(), phone: contactPhone.trim() }],
+        ...replyField,
       }),
     });
     setSending(false);
@@ -223,6 +280,7 @@ export function Composer({
     setPanel(null);
     setContactName("");
     setContactPhone("");
+    onReplyChange?.(null);
     onSent();
   }
 
@@ -296,7 +354,7 @@ export function Composer({
   const soloPersona = !conversation.windowOpen && Boolean(human?.open);
 
   return (
-    <div className="border-t bg-background px-[18px] pb-3.5 pt-3">
+    <div className="relative border-t bg-background px-[18px] pb-3.5 pt-3">
       {soloPersona && (
         <div
           data-window="human"
@@ -327,6 +385,27 @@ export function Composer({
               {t.name.replace(/_/g, " ")}
             </button>
           ))}
+        </div>
+      )}
+
+      {replyTo && (
+        <div
+          data-replying-to={replyTo.id}
+          className="mb-2.5 flex items-center gap-2 rounded-md border bg-subtle p-2"
+        >
+          <QuoteBlock
+            cita={citaDe(replyTo)}
+            contactName={conversation.contact.name}
+            className="flex-1"
+          />
+          <button
+            onClick={() => onReplyChange?.(null)}
+            aria-label="Cancelar respuesta"
+            title="Cancelar respuesta"
+            className="shrink-0 rounded p-1 text-text-3 hover:bg-secondary hover:text-foreground"
+          >
+            <X className="h-4 w-4" strokeWidth={1.7} />
+          </button>
         </div>
       )}
 
@@ -446,6 +525,7 @@ export function Composer({
             e.target.value = "";
           }}
         />
+        <EmojiPicker disabled={sending} onSelect={insertEmoji} onOpen={() => setPanel(null)} />
         {/* 028: solo lo que el canal puede mandar; en las redes, la caja sola. */}
         {(conversation.composer.media || conversation.composer.structured) && (
           <div className="flex shrink-0 items-center gap-0.5">
@@ -514,6 +594,8 @@ export function Composer({
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
               void submit();
+            } else if (e.key === "Escape" && replyTo) {
+              onReplyChange?.(null);
             }
           }}
           className="max-h-[120px] w-full resize-none self-center bg-transparent py-1 text-sm leading-relaxed outline-none placeholder:text-text-3"
