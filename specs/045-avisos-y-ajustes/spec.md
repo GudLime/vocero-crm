@@ -62,6 +62,19 @@ conversación tiene abierta.
 **D6 — El título se vuelve a poner.** Next reescribe `document.title` al
 navegar; un `MutationObserver` sobre `<head>` vuelve a anteponer el contador.
 
+**D7 — El hilo abre en el último mensaje aunque crezca después.** Hallado en
+el RC: al volver a la Bandeja, una conversación corta con una foto abría en el
+primer mensaje. El hilo bajaba al final cuando todavía cabía todo (scroll en
+0) y la foto, al terminar de cargar, lo hacía crecer hacia abajo sin moverlo.
+Ahora un `ResizeObserver` sobre el contenido lo mantiene abajo mientras crece
+(fotos, audios, citas), salvo que el operador haya subido a leer: «abajo» es
+a menos de 24 px del final.
+
+**D8 — Ids del wa-mock que no se repiten.** El contador arranca en la hora y
+no en 0: tras reiniciar el servidor, los `wamid.mock.N` ya no chocan con los
+de corridas anteriores sobre la misma base (el CRM los descartaba como
+duplicados y el arnés fallaba sin razón aparente).
+
 ## Qué NO se hace, y por qué
 
 - **Notificaciones del sistema** (las del escritorio, con permiso del
@@ -83,6 +96,9 @@ navegar; un `MutationObserver` sobre `<head>` vuelve a anteponer el contador.
 - **AC5** — La campana silencia, y sigue silenciada al recargar. (E2E.)
 - **AC6** — En Pipeline la pestaña sigue contando y suena un mensaje nuevo.
   (E2E.)
+- **AC6b** — Una conversación corta con una foto que tarda abre en el último
+  mensaje, también al volver de otra pantalla; si subiste a leer, que crezca
+  no te baja. (E2E.)
 - **AC7** — Los arneses del compositor (039–044) siguen en verde. Gates:
   `typecheck`, `lint`, `test`, `build`.
 

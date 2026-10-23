@@ -217,6 +217,65 @@ ok(
   `notas=${(await notas()) - antes}`
 );
 
+console.log("\n== El hilo abre en el último mensaje ==");
+// Una conversación corta con una foto que tarda: antes se quedaba en el
+// primer mensaje (al bajar todavía cabía todo, y la foto lo hacía crecer).
+const F = { name: `AvisoFoto${S}`, from: `52155555${rnd()}` };
+for (let i = 1; i <= 9; i++) await entra(F, `línea ${i} ${S}`);
+await req.post(`${BASE}/api/dev/wa-mock/inbound`, {
+  data: { phoneNumberId: PN, from: F.from, name: F.name, type: "image", mediaId: `media-imagen-${S}`, mimeType: "image/png" },
+});
+await entra(F, `última ${S}`);
+await until(async () => {
+  const d = await (await req.get(`${BASE}/api/conversations`)).json();
+  return (d.conversations ?? []).some((c) => c.contact.name === F.name);
+}, 30000);
+await sleep(2500);
+await page.route("**/api/media/**", async (route) => {
+  await sleep(1500);
+  await route.continue();
+});
+const alFondo = () =>
+  page.evaluate(() => {
+    const el = document.querySelector(".thread-bg");
+    return el ? el.scrollHeight - el.scrollTop - el.clientHeight : -1;
+  });
+await page.getByRole("link", { name: /Bandeja/ }).click();
+await page.waitForURL(/\/inbox/);
+await page.getByText(F.name).first().click();
+await page.getByText(`última ${S}`).last().waitFor({ timeout: 15000 });
+await sleep(3500);
+ok("con una foto que tarda, abre abajo", Math.abs(await alFondo()) < 4, `faltan ${await alFondo()} px`);
+await page.getByRole("link", { name: "Pipeline" }).click();
+await page.waitForURL(/\/pipeline/);
+await page.getByRole("link", { name: /Bandeja/ }).click();
+await page.waitForURL(/\/inbox/);
+await page.getByText(F.name).first().click();
+await page.getByText(`última ${S}`).last().waitFor({ timeout: 15000 });
+await sleep(3500);
+ok("al salir a otra pantalla y volver, también", Math.abs(await alFondo()) < 4, `faltan ${await alFondo()} px`);
+await page.evaluate(() => {
+  const el = document.querySelector(".thread-bg");
+  if (el) el.scrollTop = 0;
+});
+await sleep(300);
+await page.evaluate(() => {
+  const img = document.querySelector('.thread-bg img');
+  if (img) img.style.minHeight = "500px";
+});
+await sleep(500);
+ok(
+  "si subiste a leer, crecer el hilo no te baja",
+  await page.evaluate(() => document.querySelector(".thread-bg")?.scrollTop === 0),
+  JSON.stringify(
+    await page.evaluate(() => {
+      const el = document.querySelector(".thread-bg");
+      return { top: el?.scrollTop, max: el ? el.scrollHeight - el.clientHeight : null };
+    })
+  )
+);
+await page.unroute("**/api/media/**");
+
 ok("sin errores de página", errores.length === 0, errores.join(" | "));
 
 await browser.close();

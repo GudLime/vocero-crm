@@ -21,6 +21,10 @@ tocan (cada aviso son dos).
 8. Ir a Pipeline. **Esperado:** la pestaña sigue contando y un mensaje nuevo
    suena también ahí.
 
+9. Abrir una conversación corta con una foto que tarda en cargar.
+   **Esperado:** queda en el último mensaje; también al ir a Pipeline y
+   volver. Si subes a leer y el hilo crece, no te baja.
+
 ## Fuera del guion
 
 - El formato del título tiene su unitaria (`tests/unit/avisos-de-mensajes.test.ts`).
