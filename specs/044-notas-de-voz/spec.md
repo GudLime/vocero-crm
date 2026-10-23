@@ -84,6 +84,14 @@ el tipo completo `audio/ogg; codecs=opus`.
 lo subido (tipo, nombre, tamaño, firma) para que el arnés compruebe que salió
 un Ogg, y sirve una nota de voz Ogg real para los audios entrantes.
 
+**D8 — El adjunto avisa cuando ya bajó.** Hallado en el RC: un audio que
+llegaba con la conversación abierta se quedaba en «descargando…» hasta
+recargar. La burbuja se pinta con `message.new` antes de que termine la
+descarga, y nadie avisaba al terminar (la bandeja ignora un segundo
+`message.new` del mismo id). Ahora la ingesta publica `message.media` al
+terminar (disponible o fallido) y la bandeja reemplaza el adjunto de ese
+mensaje. Vale para todo adjunto entrante, no solo audios.
+
 ## Qué NO se hace, y por qué
 
 - **Transcripción visible en la bandeja**: hoy transcribe Nea para contestar;

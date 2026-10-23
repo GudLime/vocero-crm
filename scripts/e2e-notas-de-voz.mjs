@@ -282,6 +282,29 @@ ok("descartar cierra la grabadora", await until(async () => (await recorder.coun
 await sleep(1500);
 ok("y no manda nada", (await notasSalientes()).length === antes3);
 
+console.log("\n== Un audio que llega con la conversación abierta ==");
+const yaHabia = await reproductores.count();
+await req.post(`${BASE}/api/dev/wa-mock/inbound`, {
+  data: {
+    phoneNumberId: PN,
+    from: FROM,
+    name: NAME,
+    type: "audio",
+    mediaId: `media-audio-vivo-${S}`,
+    mimeType: "audio/ogg; codecs=opus",
+  },
+});
+ok(
+  "pasa de «descargando…» al reproductor sin recargar",
+  await until(
+    async () =>
+      (await reproductores.count()) === yaHabia + 1 &&
+      (await hilo.getByText("descargando…").count()) === 0,
+    15000
+  ),
+  `reproductores=${await reproductores.count()} descargando=${await hilo.getByText("descargando…").count()}`
+);
+
 console.log("\n== La velocidad elegida se recuerda ==");
 await page.reload();
 await page.getByText(NAME).first().click();

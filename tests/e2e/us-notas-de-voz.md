@@ -23,8 +23,10 @@ graba de verdad: lo que llega al wa-mock es lo que llegaría a Meta.
 6. La nota aparece en el hilo con duración y una onda sacada del audio.
 7. Grabar y enviar sin detener. **Esperado:** sale, también como nota de voz.
    Grabar y descartar. **Esperado:** no sale nada.
-8. Recargar. **Esperado:** los audios arrancan a la velocidad elegida (2×).
-9. Con el micrófono bloqueado. **Esperado:** «Permite el micrófono en el
+8. Con la conversación abierta, llega otro audio. **Esperado:** pasa de
+   «descargando…» al reproductor sin recargar (D8).
+9. Recargar. **Esperado:** los audios arrancan a la velocidad elegida (2×).
+10. Con el micrófono bloqueado. **Esperado:** «Permite el micrófono en el
    navegador para grabar notas de voz.» y la caja sigue usable.
 
 ## Fuera del guion
