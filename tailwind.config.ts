@@ -71,6 +71,8 @@ const config: Config = {
           // El acento como texto (una hora, un enlace): legible en los dos temas.
           ink: "var(--accent-ink)",
           veil: "var(--accent-veil)",
+          // 060b — El remate cian de la marca (filo del hilo).
+          glow: "var(--accent-glow)",
         },
         quote: {
           DEFAULT: "var(--quote-bg)",
@@ -79,6 +81,8 @@ const config: Config = {
         "text-2": "var(--text-2)",
         "text-3": "var(--text-3)",
         "text-4": "var(--text-4)",
+        // 060b — Tinta de las etiquetas e iconos del menú (AA sobre su tarjeta).
+        "nav-label": "var(--nav-label)",
         chat: "var(--chat-bg)",
         "bubble-in": "var(--bubble-in)",
         "bubble-in-border": "var(--bubble-in-border)",

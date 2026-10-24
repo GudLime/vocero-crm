@@ -288,9 +288,11 @@ export function ConversationList({
       {/* 052 (enmienda) — «Todas | No leídas» y un solo botón «Filtrar»: la
           etapa, «Por vencer» y «De anuncios» viven en su menú, y lo elegido
           se ve abajo como etiquetas que se quitan con ✕. */}
+      {/* 060b — Las pestañas y «Filtrar» como píldoras, con el contador en
+          insignia. Siguen siendo `tab` con `aria-selected`. */}
       <div className="border-b px-4">
-        <div className="flex items-center gap-4">
-          <div role="tablist" aria-label="Qué conversaciones ver" className="flex items-center gap-4">
+        <div className="flex items-center gap-1.5 py-2.5">
+          <div role="tablist" aria-label="Qué conversaciones ver" className="flex items-center gap-1.5">
             {pestanas.map((f) => (
               <button
                 key={f.id}
@@ -298,15 +300,22 @@ export function ConversationList({
                 aria-selected={filter === f.id}
                 onClick={() => setFilter(f.id)}
                 className={cn(
-                  "-mb-px flex items-center gap-1.5 whitespace-nowrap border-b-2 py-2.5 text-[13px] font-semibold transition-colors",
+                  "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-[5px] text-[12.5px] font-semibold transition-colors",
                   FOCO_SEPARADO,
                   filter === f.id
-                    ? "border-brand text-foreground"
-                    : "border-transparent text-text-3 hover:text-foreground"
+                    ? "border-brand bg-brand-tint text-brand-text"
+                    : "border-border-strong bg-chip text-text-2 hover:border-text-3"
                 )}
               >
                 {f.label}
-                <span className="font-mono text-[11px] font-medium text-text-3">{f.count}</span>
+                <span
+                  className={cn(
+                    "rounded-full px-1.5 text-[11px] tabular-nums",
+                    filter === f.id ? "bg-brand text-brand-fg" : "bg-secondary text-text-2"
+                  )}
+                >
+                  {f.count}
+                </span>
               </button>
             ))}
           </div>
@@ -318,9 +327,11 @@ export function ConversationList({
               aria-expanded={menuFiltros}
               aria-haspopup="dialog"
               className={cn(
-                "flex items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-1.5 text-[12.5px] font-semibold transition-colors",
+                "flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-[5px] text-[12.5px] font-semibold transition-colors",
                 FOCO_SEPARADO,
-                nFiltros > 0 ? "text-brand-ink" : "text-text-2 hover:bg-subtle hover:text-foreground"
+                nFiltros > 0
+                  ? "border-brand bg-brand-tint text-brand-text"
+                  : "border-border-strong bg-chip text-text-2 hover:border-text-3"
               )}
             >
               <SlidersHorizontal className="h-3.5 w-3.5" strokeWidth={1.9} />

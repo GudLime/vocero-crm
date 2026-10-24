@@ -302,3 +302,34 @@ describe("tinta sobre el acento: blanca solo si pasa AA (≥ 4.5:1)", () => {
     }
   });
 });
+
+/**
+ * 060b — El marco de tarjetas: el menú es una tarjeta (`--sidebar-bg`) con
+ * etiquetas en mono de 10.5px y renglones que, activos, son una tarjeta de la
+ * página encima. Los mismos pisos en los dos temas.
+ */
+describe("060b: la tarjeta del menú", () => {
+  for (const [tema, vars] of [
+    ["claro", claro],
+    ["oscuro", oscuro],
+  ] as const) {
+    it(`${tema}: etiquetas, renglones e iconos se leen sobre el menú`, () => {
+      piso(vars, "--nav-label", "--sidebar-bg", 4.5);
+      piso(vars, "--text-2", "--sidebar-bg", 4.5);
+      piso(vars, "--text", "--sidebar-bg", 7);
+      // El renglón bajo el cursor y el activo son `--bg` sobre el menú.
+      piso(vars, "--nav-label", "--bg", 4.5);
+      piso(vars, "--text-2", "--bg", 4.5);
+    });
+
+    it(`${tema}: el menú se despega de la página y del lienzo`, () => {
+      piso(vars, "--sidebar-bg", "--bg", 1.08);
+      piso(vars, "--sidebar-border", "--sidebar-bg", 1.05);
+    });
+  }
+
+  it("oscuro: el menú va un escalón arriba de la página", () => {
+    arriba(oscuro, "--sidebar-bg", "--bg");
+    arriba(oscuro, "--bg", "--canvas-mid");
+  });
+});

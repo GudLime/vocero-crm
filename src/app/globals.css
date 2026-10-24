@@ -92,14 +92,29 @@
     --overlay: rgba(4, 16, 46, 0.55);
     --knob: #ffffff;
 
-    /* Radios y sombras (las de la landing, con tinte azul marino) */
-    --radius-sm: 9px;
-    --radius: 12px;
-    --radius-lg: 16px;
-    --shadow-sm: 0 1px 2px rgba(8, 27, 82, 0.06);
-    --shadow-md: 0 14px 40px -16px rgba(8, 27, 82, 0.16);
-    --shadow-pop: 0 30px 80px -20px rgba(8, 27, 82, 0.22),
-      0 8px 24px -12px rgba(8, 27, 82, 0.12);
+    /* Radios y sombras (060b: los de la referencia — esquinas más redondas y
+       sombras en dos capas, más suaves, con tinte azul marino) */
+    --radius-sm: 10px;
+    --radius: 14px;
+    --radius-lg: 20px;
+    --shadow-sm: 0 1px 2px rgba(8, 27, 82, 0.05), 0 1px 3px rgba(8, 27, 82, 0.06);
+    --shadow-md: 0 4px 12px -4px rgba(8, 27, 82, 0.12),
+      0 12px 32px -12px rgba(8, 27, 82, 0.14);
+    --shadow-pop: 0 24px 64px -20px rgba(8, 27, 82, 0.28);
+
+    /* 060b — El marco de tarjetas: el lienzo detrás (degradado frío), la
+       tarjeta del menú y la tinta de sus etiquetas. `--nav-label` existe
+       porque --text-3 sobre --sidebar-bg queda en 2.8:1: las letras de
+       sección («A · TRABAJO») miden 10.5px y piden AA. */
+    --canvas-top: #dfe7f5;
+    --canvas-mid: #eef2f9;
+    --canvas-bottom: #f7f9fd;
+    --sidebar-bg: #eef2f9;
+    --sidebar-border: #e4eaf5;
+    --nav-label: #5e6c87;
+    /* Remate cian de la marca Vocero (filo del hilo, resplandor del lienzo):
+       neutro, no lo toca el white-label. */
+    --accent-glow: #00c2ff;
 
     /* Densidad de filas de conversación */
     --row-py: 11px;
@@ -182,6 +197,17 @@
 
     --overlay: rgba(2, 8, 24, 0.72);
     --knob: #dfe6fa;
+
+    /* 060b — En oscuro el lienzo es el hueco (--bg-subtle) y el menú una
+       tarjeta un escalón arriba de la página, como el `bg-panel` de la
+       referencia pero dentro de la escalera v2 (ver contraste-temas). */
+    --canvas-top: #141c30;
+    --canvas-mid: #141c30;
+    --canvas-bottom: #141c30;
+    --sidebar-bg: #222d47;
+    --sidebar-border: #36476f;
+    --nav-label: #9aa9ca;
+    --accent-glow: #38d6ff;
 
     /* Sombras: sobre oscuro necesitan más negro para leerse */
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45);
@@ -348,6 +374,79 @@
       color-mix(in srgb, var(--text-3) 22%, transparent) 0 1px,
       transparent 1px 7px
     );
+  }
+
+  /*
+    060b — El marco de tarjetas. La app vive en dos tarjetas que flotan sobre
+    un lienzo: el menú (`.app-sidebar`) y el contenido (`.app-window`). El
+    lienzo lleva dos resplandores, el del acento (white-label) y el cian de la
+    marca, sobre un degradado frío; en oscuro los tokens --canvas-* son el
+    mismo hueco y el degradado desaparece.
+  */
+  .app-canvas {
+    background:
+      radial-gradient(1200px 500px at 15% -10%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 60%),
+      radial-gradient(900px 480px at 95% 0, color-mix(in srgb, var(--accent-glow) 10%, transparent), transparent 55%),
+      linear-gradient(180deg, var(--canvas-top), var(--canvas-mid) 42%, var(--canvas-bottom));
+  }
+  :root[data-theme="dark"] .app-canvas {
+    background: var(--bg-subtle);
+  }
+  .app-sidebar {
+    background: var(--sidebar-bg);
+    border: 1px solid var(--sidebar-border);
+    border-radius: 20px;
+  }
+  .app-window {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+  }
+  /* Píldoras de la barra superior: buscador, organización, avatar. */
+  .top-pill {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    box-shadow: var(--shadow-sm);
+  }
+  /* Etiqueta de sección del menú: la `.kicker` con la tinta del menú. */
+  .nav-label {
+    @apply font-mono text-[10.5px] font-medium uppercase tracking-[0.14em];
+    color: var(--nav-label);
+  }
+  /* Avatar «en relieve»: degradado del acento con brillo arriba y sombra
+     abajo. El texto blanco va sobre --accent-text en la parte más oscura. */
+  .icon-3d {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    color: var(--accent-fg);
+    background: linear-gradient(135deg, var(--accent-hover), var(--accent) 60%, var(--accent-text));
+    box-shadow:
+      inset 0 1px 1px rgba(255, 255, 255, 0.45),
+      inset 0 -2px 4px rgba(0, 0, 0, 0.18),
+      0 6px 14px -6px rgba(8, 27, 82, 0.45);
+  }
+  :root[data-theme="dark"] .icon-3d {
+    background: linear-gradient(
+      135deg,
+      var(--accent-hover),
+      var(--accent) 60%,
+      color-mix(in srgb, var(--accent) 70%, #000)
+    );
+  }
+  .icon-3d::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(rgba(255, 255, 255, 0.35), transparent 55%);
+    pointer-events: none;
   }
 
   /* Etiqueta editorial en mono: "01 · BANDEJA", "ETAPA", "NOTAS" */

@@ -22,6 +22,9 @@ import { mkdirSync } from "node:fs";
 
 const BASE = process.env.APP_BASE_URL ?? "http://localhost:3000";
 const PN = "PN-RESP-1";
+// Como los demás arneses: una cuenta que ya exista si el registro está cerrado.
+const EMAIL = process.env.E2E_EMAIL ?? "e2e@vocero.test";
+const PASSWORD = process.env.E2E_PASSWORD ?? "password-e2e-123";
 const S = Math.random().toString(36).slice(2, 6).toUpperCase();
 const SHOTS = "scratch/responsive";
 let failures = 0;
@@ -73,15 +76,15 @@ console.log("== Setup ==");
 let r = await req.post(`${BASE}/api/auth/sign-up/email`, {
   headers: { origin: BASE },
   data: {
-    email: "e2e@vocero.test",
-    password: "password-e2e-123",
+    email: EMAIL,
+    password: PASSWORD,
     name: "Operador E2E",
   },
 });
 if (!r.ok())
   r = await req.post(`${BASE}/api/auth/sign-in/email`, {
     headers: { origin: BASE },
-    data: { email: "e2e@vocero.test", password: "password-e2e-123" },
+    data: { email: EMAIL, password: PASSWORD },
   });
 ok("login", r.ok());
 await req.put(`${BASE}/api/settings/whatsapp`, {
@@ -161,24 +164,32 @@ ok(
   "el lateral arranca oculto (sus enlaces no son alcanzables)",
   !(await linkBandeja.isVisible())
 );
+const mainAntes = await phone.evaluate(() =>
+  Math.round(document.querySelector("main")?.getBoundingClientRect().left ?? -1)
+);
 await hamburguesa.click();
 ok(
   "al tocar la hamburguesa el cajón abre",
   await until(async () => await linkBandeja.isVisible(), 3000)
 );
-// El cajón NO debe empujar el contenido: sale encima.
-const encima = await phone.evaluate(() => {
-  const aside = document.querySelector("aside");
-  const main = document.querySelector("main");
-  if (!aside || !main) return null;
-  const a = aside.getBoundingClientRect();
-  const m = main.getBoundingClientRect();
-  return { asideLeft: Math.round(a.left), mainLeft: Math.round(m.left) };
-});
+// El cajón NO debe empujar el contenido: sale encima. 060b: el contenido
+// vive en una tarjeta con margen, así que se compara con donde estaba antes
+// de abrir, y se espera a que termine de deslizarse (200 ms).
+const medirEncima = () =>
+  phone.evaluate(() => {
+    const aside = document.querySelector("aside");
+    const main = document.querySelector("main");
+    if (!aside || !main) return null;
+    const a = aside.getBoundingClientRect();
+    const m = main.getBoundingClientRect();
+    return { asideLeft: Math.round(a.left), mainLeft: Math.round(m.left) };
+  });
+await until(async () => (await medirEncima())?.asideLeft === 0, 3000);
+const encima = await medirEncima();
 ok(
   "el cajón flota encima del contenido (no lo empuja)",
-  encima !== null && encima.asideLeft <= 1 && encima.mainLeft <= 1,
-  JSON.stringify(encima)
+  encima !== null && encima.asideLeft <= 1 && encima.mainLeft === mainAntes,
+  JSON.stringify({ ...encima, mainAntes })
 );
 await phone.screenshot({ path: `${SHOTS}/phone-cajon-abierto.png` });
 await linkBandeja.click();
@@ -194,14 +205,22 @@ await phone.goto(`${BASE}/inbox`);
 const fila = phone.getByText(NAME).first();
 await fila.waitFor({ timeout: 20000 });
 ok("la lista de conversaciones ocupa la pantalla", await fila.isVisible());
+// 060b — La app vive en una tarjeta con 8 px de margen: la lista ocupa todo
+// el ancho de esa tarjeta, no el de la pantalla.
 const anchoLista = await phone.evaluate(() => {
   const sec = document.querySelector("main > div > section");
-  return sec ? Math.round(sec.getBoundingClientRect().width) : 0;
+  const tarjeta = document.querySelector("main");
+  return {
+    lista: sec ? Math.round(sec.getBoundingClientRect().width) : 0,
+    tarjeta: tarjeta ? Math.round(tarjeta.getBoundingClientRect().width) : 0,
+  };
 });
 ok(
-  "la lista usa el ancho completo del teléfono",
-  anchoLista >= PHONE.width - 8,
-  `${anchoLista}px de ${PHONE.width}`
+  "la lista usa el ancho completo de la tarjeta",
+  anchoLista.lista > 0 &&
+    anchoLista.lista >= anchoLista.tarjeta - 1 &&
+    anchoLista.tarjeta >= PHONE.width - 20,
+  JSON.stringify(anchoLista)
 );
 await fila.click();
 const composer = phone.getByPlaceholder("Escribe una respuesta");
@@ -310,20 +329,22 @@ const medirColumnas = () =>
 // El panel abre con transición de 220 ms: medir apenas aparece el compositor
 // atraparía un ancho a medio camino.
 const columnasOk = (t) =>
-  t.aside === 224 && t.secs[0] === 360 && t.secs.at(-1) === 320;
+  t.aside === 264 && t.secs[0] === 360 && t.secs.at(-1) === 320;
 await until(async () => columnasOk(await medirColumnas()), 8000);
 const tres = await medirColumnas();
 ok(
-  "escritorio conserva lateral 224px + lista 360px + hilo + detalles 320px",
+  // 060b — El menú es una tarjeta de 16.5rem (antes una columna de 14rem).
+  "escritorio: menú 264px + lista 360px + hilo + detalles 320px",
   columnasOk(tres),
   JSON.stringify(tres)
 );
 await desk.screenshot({ path: `${SHOTS}/desktop-inbox.png` });
 
-console.log("\n== 7. Barra bicolor e interruptores (#53) ==");
-// Luminancia relativa (WCAG) de un `rgb(...)` calculado: se afirma que la
-// barra es OSCURA y la página CLARA, no un hex concreto que un ajuste de
-// tokens cambiaría.
+console.log("\n== 7. Menú en tarjeta e interruptores (#53, 060b) ==");
+// Luminancia relativa (WCAG) de un `rgb(...)` calculado: se afirma la
+// relación entre el menú y la página, no un hex concreto que un ajuste de
+// tokens cambiaría. 060b: el menú dejó de ser azul marino fijo; es una
+// tarjeta del tema activo, un escalón distinta de la tarjeta del contenido.
 const luminancia = (rgb) => {
   const [r, g, b] = (rgb.match(/\d+(\.\d+)?/g) ?? []).slice(0, 3).map((v) => {
     const c = Number(v) / 255;
@@ -334,19 +355,20 @@ const luminancia = (rgb) => {
 // El contexto no manda la cookie de tema: la página está en claro.
 const barra = await desk.evaluate(() => {
   const aside = document.querySelector("aside");
+  const ventana = document.querySelector(".app-window");
   return {
     tema: document.documentElement.dataset.theme,
     fondo: aside ? getComputedStyle(aside).backgroundColor : "",
     tinta: aside ? getComputedStyle(aside).color : "",
-    pagina: getComputedStyle(document.body).backgroundColor,
+    pagina: ventana ? getComputedStyle(ventana).backgroundColor : "",
   };
 });
 ok(
-  "con el tema claro, la barra lateral es azul marino y su texto claro",
+  "con el tema claro, el menú es una tarjeta clara, un escalón bajo la página, con texto oscuro",
   barra.tema === "light" &&
-    luminancia(barra.fondo) < 0.05 &&
-    luminancia(barra.tinta) > 0.6 &&
-    luminancia(barra.pagina) > 0.8,
+    luminancia(barra.fondo) > 0.7 &&
+    luminancia(barra.fondo) < luminancia(barra.pagina) &&
+    luminancia(barra.tinta) < 0.05,
   JSON.stringify(barra)
 );
 
@@ -425,9 +447,10 @@ await desk.goto(`${BASE}/agent`, { waitUntil: "domcontentloaded" });
 await probarInterruptor(desk, "Agente encendido");
 await desk.screenshot({ path: `${SHOTS}/desktop-agente.png` });
 
-console.log("\n== 8. Tema oscuro: el bicolor no desaparece (R8) ==");
-// Mismo criterio que la barra en claro: luminancias medidas en el navegador,
-// no un hex. Con el tema oscuro de antes, barra y página quedaban a 1.04:1.
+console.log("\n== 8. Tema oscuro: menú y página se distinguen (R8, 060b) ==");
+// Mismo criterio que en claro: luminancias medidas en el navegador, no un
+// hex. 060b: el menú va un escalón ARRIBA de la página (la tarjeta del
+// contenido), como el `bg-panel` de la referencia.
 const contraste = (a, b) => {
   const [x, y] = [luminancia(a), luminancia(b)].sort((p, q) => q - p);
   return (x + 0.05) / (y + 0.05);
@@ -444,18 +467,19 @@ await until(async () => {
 const oscuro = await desk.evaluate(() => {
   const aside = document.querySelector("aside");
   const dlg = document.querySelector('[role="dialog"][aria-label="Nuevo contacto"]');
+  const ventana = document.querySelector(".app-window");
   return {
     tema: document.documentElement.dataset.theme,
     barra: aside ? getComputedStyle(aside).backgroundColor : "",
-    pagina: getComputedStyle(document.body).backgroundColor,
+    pagina: ventana ? getComputedStyle(ventana).backgroundColor : "",
     dialogo: dlg ? getComputedStyle(dlg).backgroundColor : "",
   };
 });
 ok(
-  "en oscuro, la barra es más oscura que la página (≥ 1.25:1)",
+  "en oscuro, el menú va un escalón arriba de la página (≥ 1.08:1)",
   oscuro.tema === "dark" &&
-    luminancia(oscuro.barra) < luminancia(oscuro.pagina) &&
-    contraste(oscuro.barra, oscuro.pagina) >= 1.25,
+    luminancia(oscuro.barra) > luminancia(oscuro.pagina) &&
+    contraste(oscuro.barra, oscuro.pagina) >= 1.08,
   JSON.stringify(oscuro)
 );
 ok(
@@ -468,16 +492,17 @@ await desk.setViewportSize(PHONE);
 await desk.goto(`${BASE}/inbox`, { waitUntil: "domcontentloaded" });
 await desk.getByRole("button", { name: "Abrir el menú" }).waitFor({ timeout: 20000 });
 const franja = await desk.evaluate(() => {
-  const aside = document.querySelector("aside");
-  const barra = document.querySelector("main")?.previousElementSibling;
+  // 060b — La barra del teléfono va DENTRO de la tarjeta del contenido.
+  const ventana = document.querySelector(".app-window");
+  const barra = ventana?.querySelector(":scope > header");
   return {
     barra: barra ? getComputedStyle(barra).backgroundColor : "",
-    lateral: aside ? getComputedStyle(aside).backgroundColor : "",
+    pagina: ventana ? getComputedStyle(ventana).backgroundColor : "",
   };
 });
 ok(
-  "en el teléfono, la franja de arriba es la misma pieza que la barra",
-  franja.barra !== "" && franja.barra === franja.lateral,
+  "en el teléfono, la franja de arriba va dentro de la tarjeta, con su fondo",
+  franja.barra !== "" && franja.barra === franja.pagina,
   JSON.stringify(franja)
 );
 await desk.screenshot({ path: `${SHOTS}/phone-inbox-oscuro.png` });

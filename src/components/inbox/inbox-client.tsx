@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { ChevronLeft, PanelRight } from "lucide-react";
+import { ChevronLeft, MessageCircle, PanelRight } from "lucide-react";
 import { cn, formatPhone } from "@/lib/utils";
 import { ContactAvatar } from "@/components/avatar";
 import type { NotaDto } from "@/lib/notas";
@@ -433,7 +433,12 @@ export function InboxClient({
       >
         {selected ? (
           <>
-            <header className="flex items-center justify-between gap-1 border-b bg-background px-2 py-2.5 md:px-4">
+            <header className="relative flex items-center justify-between gap-1 overflow-hidden border-b bg-background px-2 py-2.5 md:px-4">
+              {/* 060b — El filo del hilo: el acento que se funde en el cian. */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-brand to-brand-glow"
+              />
               {/* Volver a la lista: en móvil el hilo ocupa toda la pantalla. */}
               <button
                 onClick={() => setSelectedId(null)}
@@ -449,7 +454,7 @@ export function InboxClient({
                   size="md"
                 />
                 <div className="min-w-0">
-                  <p className="flex min-w-0 items-center gap-1.5 text-[15px] font-bold leading-tight tracking-tight">
+                  <p className="flex min-w-0 items-center gap-1.5 text-[15px] font-semibold leading-tight tracking-tight">
                     {multiChannel && <ChannelBadge channel={selected.channel} />}
                     <span className="truncate">{selected.contact.name}</span>
                   </p>
@@ -482,7 +487,7 @@ export function InboxClient({
                 <button
                   onClick={() => togglePanel(true)}
                   aria-label="Mostrar detalles"
-                  className="shrink-0 rounded-full border border-border-strong p-1.5 text-text-3 transition-colors hover:border-text-3 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="flex min-h-10 min-w-10 shrink-0 items-center justify-center rounded-full border border-border-strong text-text-3 transition-colors hover:border-text-3 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <PanelRight className="h-4 w-4" strokeWidth={1.7} />
                 </button>
@@ -550,7 +555,10 @@ export function InboxClient({
             </Composer>
           </>
         ) : (
-          <div className="thread-bg flex flex-1 flex-col items-center justify-center gap-2 px-6 text-center">
+          <div className="thread-bg flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
+            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-tint shadow-sm">
+              <MessageCircle className="h-7 w-7 text-brand-text" strokeWidth={1.6} aria-hidden />
+            </span>
             <p className="font-serif text-[24px] italic leading-tight text-text-2">
               Elige una conversación para ver el hilo
             </p>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { AlertTriangle, Bell, BellOff, LogOut, X } from "lucide-react";
+import { AlertTriangle, Bell, BellOff, ChevronDown, LogOut, X } from "lucide-react";
 import { BotonInstalar } from "@/components/pwa";
 import { BotonActivarAvisos } from "@/components/activar-avisos";
 import { limpiarBorradores } from "@/lib/borradores";
@@ -42,20 +42,24 @@ import {
 } from "@/lib/version";
 
 /**
- * Un renglón del menú, como el `side-item` del mockup de la landing: texto
- * semibold, esquinas de 9px y, activo, lavado del acento con tinta azul.
- * Exportado para la vista previa de Configuración → Marca, que pinta la barra.
+ * Un renglón del menú (060b): esquinas de 12px y, activo, una tarjeta de la
+ * página encima del menú, con borde, sombra y tinta del acento. El borde
+ * transparente en los inactivos evita que el texto salte un píxel al
+ * activarse. Exportado para la vista previa de Configuración → Marca.
  */
 export function navItemClass(active: boolean) {
   return cn(
-    "flex items-center gap-[10px] rounded-sm px-2.5 py-2.5 text-[13.5px] font-semibold transition-colors lg:py-2",
-    // Acento sólido: dentro de `.nav-dark` es el calculado para fondo oscuro,
-    // así que contrasta con la barra (≥ 3.5:1) sea cual sea el white-label.
+    "flex items-center gap-[10px] rounded-[12px] border px-2.5 py-2.5 text-[13.5px] transition-all lg:py-2",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
     active
-      ? "bg-brand-tint text-brand-text"
-      : "text-text-2 hover:bg-accent hover:text-foreground"
+      ? "border-border bg-background font-semibold text-brand-text shadow-sm"
+      : "border-transparent font-medium text-text-2 hover:bg-background hover:text-foreground"
   );
+}
+
+/** «A · Trabajo»: la letra dice el orden del menú de un vistazo. */
+function letraDeGrupo(i: number) {
+  return String.fromCharCode(65 + i);
 }
 
 export function AppNav({
@@ -97,6 +101,9 @@ export function AppNav({
   // 045 — Chats con algo sin leer: es lo que WhatsApp cuenta en la pestaña.
   const [chats, setChats] = useState(0);
   const [sonido, setSonido] = useState(true);
+  // 060b — Secciones plegadas. Nacen abiertas: con tan pocos renglones,
+  // esconder pantallas por defecto no gana espacio y hace buscar.
+  const [plegados, setPlegados] = useState<Record<string, boolean>>({});
 
   async function refetchUnread() {
     const res = await fetch("/api/conversations").catch(() => null);
@@ -176,7 +183,7 @@ export function AppNav({
         aria-current={active ? "page" : undefined}
       >
         <item.icon
-          className={cn("h-5 w-5 shrink-0", active ? "text-brand" : "text-text-3")}
+          className={cn("h-[18px] w-[18px] shrink-0", active ? "text-brand-text" : "text-nav-label")}
           strokeWidth={1.8}
           aria-hidden
         />
@@ -202,42 +209,84 @@ export function AppNav({
         // nombre del usuario, el nombre white-label en BrandLogo) hereda el
         // color YA CALCULADO en <body> con el tema de la página, no el de
         // `.nav-dark` — y un texto oscuro sobre este fondo oscuro se pierde.
-        "nav-dark fixed inset-y-0 left-0 z-50 flex w-[17rem] shrink-0 flex-col overflow-y-auto border-r bg-subtle px-3 pb-3.5 pt-4 text-foreground transition-[transform,visibility] duration-200",
-        "lg:static lg:visible lg:z-auto lg:w-56 lg:translate-x-0 lg:overflow-visible lg:transition-none",
+        "app-sidebar fixed inset-y-0 left-0 z-50 flex w-[17rem] shrink-0 flex-col overflow-y-auto px-3 pb-3.5 pt-4 text-foreground transition-[transform,visibility] duration-200",
+        // En el teléfono el cajón va pegado al borde: sin las esquinas de la
+        // izquierda, que quedarían cortadas por la pantalla.
+        "max-lg:rounded-l-none max-lg:border-l-0",
+        "lg:static lg:visible lg:z-auto lg:w-[16.5rem] lg:translate-x-0 lg:transition-none",
         open ? "visible translate-x-0 shadow-pop" : "invisible -translate-x-full"
       )}
     >
       {/* Marca: el logo de Vocero o, white-label, la inicial y el nombre */}
-      <div className="mb-5 flex items-start gap-1.5 px-2 pt-0.5">
+      <div className="mb-4 flex items-start gap-1.5 px-2 pt-0.5">
         {/* En móvil el cajón necesita su propio cierre: el velo no siempre es
             alcanzable con el pulgar. */}
         <button
           onClick={onClose}
           aria-label="Cerrar el menú"
-          className="-ml-1 mt-0.5 rounded-md p-1.5 text-text-3 hover:bg-accent hover:text-foreground lg:hidden"
+          className="-ml-1 mt-0.5 rounded-md p-1.5 text-text-2 hover:bg-background hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
         >
           <X className="h-[18px] w-[18px]" strokeWidth={1.8} />
         </button>
         <div className="min-w-0">
           <BrandLogo branding={branding} />
-          <span className="kicker mt-2 block">{kicker}</span>
+          <span className="nav-label mt-2 block">{kicker}</span>
         </div>
       </div>
 
-      {/* Grupos con encabezado pequeño, sin letras ni colapsables: se leen
-          de arriba abajo como una lista de lo que hay. Un grupo sin título
-          (Resultados) es una entrada suelta separada por el espacio. */}
-      <nav className="flex flex-col gap-4" aria-label="Secciones">
-        {groups.map((group, i) => (
-          <div key={group.title ?? i} className="flex flex-col gap-0.5">
-            {group.title && (
-              <span className="kicker mb-1 block px-2.5" aria-hidden>
-                {group.title}
-              </span>
-            )}
-            {group.items.map(renderItem)}
-          </div>
-        ))}
+      {/* 060b — Secciones con letra que se pliegan, como en la referencia. Un
+          grupo sin título (Resultados) es una entrada suelta. */}
+      <nav className="flex flex-col gap-1.5" aria-label="Secciones">
+        {groups.map((group, i) => {
+          if (!group.title) {
+            return (
+              <div key={i} className="flex flex-col gap-0.5">
+                {group.items.map(renderItem)}
+              </div>
+            );
+          }
+          const titulo = group.title;
+          const abierto = !plegados[titulo];
+          const conActivo = group.items.some((it) => isNavActive(pathname, it.href));
+          return (
+            <div key={titulo} className="overflow-hidden rounded-[14px]">
+              <button
+                type="button"
+                aria-expanded={abierto}
+                onClick={() => setPlegados((p) => ({ ...p, [titulo]: abierto }))}
+                className={cn(
+                  "flex w-full items-center gap-2 rounded-[14px] px-2.5 py-2 text-left transition-colors hover:bg-background",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  conActivo && !abierto && "bg-background"
+                )}
+              >
+                <span className="nav-label flex-1">
+                  {letraDeGrupo(i)} · {titulo}
+                </span>
+                <ChevronDown
+                  className={cn(
+                    "h-4 w-4 shrink-0 text-nav-label transition-transform duration-200",
+                    abierto && "rotate-180"
+                  )}
+                  strokeWidth={1.8}
+                  aria-hidden
+                />
+              </button>
+              <div
+                className={cn(
+                  "grid transition-[grid-template-rows] duration-200",
+                  abierto ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                )}
+                // Plegada, sus enlaces no se alcanzan con Tab.
+                inert={!abierto}
+              >
+                <div className="min-h-0 overflow-hidden">
+                  <div className="flex flex-col gap-0.5 pb-1 pt-1">{group.items.map(renderItem)}</div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </nav>
 
       <div className="flex-1" />
@@ -250,8 +299,8 @@ export function AppNav({
       {/* Ajustes va abajo, solo: no es trabajo del día. */}
       {renderItem(SETTINGS_ITEM)}
 
-      <div className="mt-1 flex items-center gap-2.5 rounded-sm px-2.5 py-2 hover:bg-accent">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-bold text-brand-text">
+      <div className="mt-2 flex items-center gap-2.5 rounded-[14px] border bg-background px-2.5 py-2 shadow-sm">
+        <span className="icon-3d h-8 w-8 rounded-full text-xs font-bold" aria-hidden>
           {initials(userName)}
         </span>
         <span className="min-w-0 flex-1">

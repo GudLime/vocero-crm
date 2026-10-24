@@ -27,8 +27,22 @@ type Resultado =
 
 const MAX_CONVERSACIONES = 8;
 
+/** 060b — El evento con el que la barra superior abre la barra Ctrl+K. */
+const EVENTO_ABRIR_BARRA = "vocero:abrir-barra";
+
+/** Abre la barra Ctrl+K desde un botón (el buscador de la barra superior). */
+export function abrirBarraDeComandos() {
+  window.dispatchEvent(new Event(EVENTO_ABRIR_BARRA));
+}
+
 export function AtajosGlobales({ agenda, role }: { agenda: boolean; role: string }) {
   const [abierto, setAbierto] = useState<"barra" | "ayuda" | null>(null);
+
+  useEffect(() => {
+    const abrir = () => setAbierto("barra");
+    window.addEventListener(EVENTO_ABRIR_BARRA, abrir);
+    return () => window.removeEventListener(EVENTO_ABRIR_BARRA, abrir);
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

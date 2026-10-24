@@ -30,12 +30,14 @@ export function EmptyState({
         className
       )}
     >
-      <span className="mb-1 flex h-12 w-12 items-center justify-center rounded-full bg-brand-tint text-brand">
-        <Icon className="h-6 w-6" strokeWidth={1.6} aria-hidden />
+      {/* 060b — Círculo de 64px con sombra y el título en la voz editorial
+          (Instrument Serif itálica), como los vacíos de la referencia. */}
+      <span className="mb-1 flex h-16 w-16 items-center justify-center rounded-full bg-brand-tint text-brand-text shadow-sm">
+        <Icon className="h-7 w-7" strokeWidth={1.6} aria-hidden />
       </span>
-      <p className="text-sm font-semibold text-foreground">{title}</p>
+      <p className="font-serif text-[21px] italic leading-tight text-foreground">{title}</p>
       {description && (
-        <p className="max-w-sm text-sm leading-relaxed text-text-3">{description}</p>
+        <p className="max-w-sm text-[13px] leading-relaxed text-text-3">{description}</p>
       )}
       {action && <div className="mt-2">{action}</div>}
     </div>
