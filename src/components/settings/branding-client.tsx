@@ -8,7 +8,6 @@ import {
   DEFAULT_BRANDING,
   isValidHex,
   resolveAccentSet,
-  resolveNavAccentSet,
   type AccentSet,
   type Branding,
 } from "@/lib/branding";
@@ -83,7 +82,6 @@ export function BrandingClient({
   // presets están pensados para fondo claro y en oscuro se aclaran. La barra
   // lateral es azul marino en los dos temas y lleva su propio cálculo.
   const previewSet = resolveAccentSet(accent, mode);
-  const navSet = resolveNavAccentSet(accent);
 
   async function save() {
     setSaving(true);
@@ -200,17 +198,17 @@ export function BrandingClient({
             </p>
           </div>
 
-          {/* Vista previa: el bicolor real en miniatura, con el color que se
-              está eligiendo (aún sin guardar). A la izquierda la barra, con la
-              misma clase (`nav-dark`) y el mismo renglón activo que la de
-              verdad; a la derecha la página en el tema activo, con su botón. */}
+          {/* Vista previa: la app en miniatura, con el color que se está
+              eligiendo (aún sin guardar). A la izquierda el lateral, con la
+              misma clase (`shell-sidebar`, 060a) y el mismo renglón activo que
+              el de verdad; a la derecha la página en el tema activo. */}
           <div
             aria-label="Vista previa de la marca"
             className="flex flex-col overflow-hidden rounded-md border border-border-strong sm:flex-row"
           >
             <div
-              className="nav-dark shrink-0 bg-subtle p-3 text-foreground sm:w-60"
-              style={accentVars(navSet)}
+              className="shell-sidebar shrink-0 rounded-none border-0 p-3 text-foreground sm:w-60"
+              style={accentVars(previewSet)}
             >
               <div className="px-2 pt-0.5">
                 <BrandLogo
@@ -219,7 +217,7 @@ export function BrandingClient({
                 <span className="kicker mt-2 block">{kicker}</span>
               </div>
               <span className={cn(navItemClass(true), "mt-3")}>
-                <Inbox className="h-[17px] w-[17px] text-brand" strokeWidth={1.8} />
+                <Inbox className="h-[18px] w-[18px] text-brand-text" strokeWidth={1.9} />
                 <span className="flex-1">Bandeja</span>
               </span>
             </div>

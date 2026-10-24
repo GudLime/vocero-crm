@@ -27,8 +27,20 @@ type Resultado =
 
 const MAX_CONVERSACIONES = 8;
 
+/** 060a — Abrir la barra sin teclado: el buscador de la barra superior. */
+const ABRIR_BARRA = "vocero:abrir-barra";
+export function abrirBarraDeComandos() {
+  window.dispatchEvent(new Event(ABRIR_BARRA));
+}
+
 export function AtajosGlobales({ agenda, role }: { agenda: boolean; role: string }) {
   const [abierto, setAbierto] = useState<"barra" | "ayuda" | null>(null);
+
+  useEffect(() => {
+    const abrir = () => setAbierto("barra");
+    window.addEventListener(ABRIR_BARRA, abrir);
+    return () => window.removeEventListener(ABRIR_BARRA, abrir);
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

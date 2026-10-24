@@ -412,7 +412,9 @@ export function InboxClient({
           hilo en cuanto hay conversación elegida (patrón maestro-detalle). */}
       <section
         className={cn(
-          "w-full shrink-0 overflow-hidden border-r md:w-[300px] lg:w-[360px]",
+          // 060a — La ventana flotante y el lateral más ancho le quitan ~80px al
+          // hilo: la lista crece a 360 solo cuando sobra (2xl).
+          "w-full shrink-0 overflow-hidden border-r md:w-[300px] lg:w-[330px] 2xl:w-[360px]",
           selected && "max-md:hidden"
         )}
       >
@@ -433,7 +435,13 @@ export function InboxClient({
       >
         {selected ? (
           <>
-            <header className="flex items-center justify-between gap-1 border-b bg-background px-2 py-2.5 md:px-4">
+            <header className="relative flex items-center justify-between gap-1 overflow-hidden border-b bg-background px-2 py-2.5 md:px-4">
+              {/* 060a — Un filo del acento arriba del hilo abierto, con el
+                  remate cian de la marca. */}
+              <span
+                aria-hidden
+                className="filo-acento pointer-events-none absolute inset-x-0 top-0 h-[3px]"
+              />
               {/* Volver a la lista: en móvil el hilo ocupa toda la pantalla. */}
               <button
                 onClick={() => setSelectedId(null)}

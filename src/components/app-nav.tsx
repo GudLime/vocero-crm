@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { AlertTriangle, Bell, BellOff, LogOut, X } from "lucide-react";
+import { AlertTriangle, Bell, BellOff, ChevronDown, LogOut, X } from "lucide-react";
 import { BotonInstalar } from "@/components/pwa";
 import { BotonActivarAvisos } from "@/components/activar-avisos";
 import { limpiarBorradores } from "@/lib/borradores";
@@ -42,20 +42,32 @@ import {
 } from "@/lib/version";
 
 /**
- * Un renglón del menú, como el `side-item` del mockup de la landing: texto
- * semibold, esquinas de 9px y, activo, lavado del acento con tinta azul.
+ * Un renglón del menú (060a): esquinas de 12px y, activo, una tarjeta del
+ * color de la ventana con borde, sombra corta y tinta del acento; bajo el
+ * cursor, la misma tarjeta sin borde. El borde transparente de los demás
+ * guarda el alto para que nada salte al cambiar de pantalla.
  * Exportado para la vista previa de Configuración → Marca, que pinta la barra.
  */
 export function navItemClass(active: boolean) {
   return cn(
-    "flex items-center gap-[10px] rounded-sm px-2.5 py-2.5 text-[13.5px] font-semibold transition-colors lg:py-2",
-    // Acento sólido: dentro de `.nav-dark` es el calculado para fondo oscuro,
-    // así que contrasta con la barra (≥ 3.5:1) sea cual sea el white-label.
+    "flex items-center gap-[10px] rounded-[12px] border px-2.5 py-2.5 text-[13.5px] transition-all lg:py-2",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
     active
-      ? "bg-brand-tint text-brand-text"
-      : "text-text-2 hover:bg-accent hover:text-foreground"
+      ? "border-border bg-background font-semibold text-brand-text shadow-sm"
+      : "border-transparent font-medium text-text-2 hover:bg-background hover:text-foreground hover:shadow-sm"
   );
+}
+
+/** 060a — Qué grupos del menú plegó la persona (por título), en este navegador. */
+const PLEGADOS_KEY = "vocero.navPlegados";
+
+function leerPlegados(): string[] {
+  try {
+    const v: unknown = JSON.parse(localStorage.getItem(PLEGADOS_KEY) ?? "[]");
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+  } catch {
+    return [];
+  }
 }
 
 export function AppNav({
@@ -97,6 +109,19 @@ export function AppNav({
   // 045 — Chats con algo sin leer: es lo que WhatsApp cuenta en la pestaña.
   const [chats, setChats] = useState(0);
   const [sonido, setSonido] = useState(true);
+  const [plegados, setPlegados] = useState<string[]>([]);
+
+  function plegar(titulo: string) {
+    setPlegados((v) => {
+      const nuevos = v.includes(titulo) ? v.filter((t) => t !== titulo) : [...v, titulo];
+      try {
+        localStorage.setItem(PLEGADOS_KEY, JSON.stringify(nuevos));
+      } catch {
+        // sin almacenamiento, el pliegue dura lo que la pestaña
+      }
+      return nuevos;
+    });
+  }
 
   async function refetchUnread() {
     const res = await fetch("/api/conversations").catch(() => null);
@@ -112,6 +137,7 @@ export function AppNav({
   useEffect(() => {
     void refetchUnread();
     setSonido(sonidoActivado());
+    setPlegados(leerPlegados());
   }, []);
 
   useDesbloquearAudio();
@@ -176,8 +202,8 @@ export function AppNav({
         aria-current={active ? "page" : undefined}
       >
         <item.icon
-          className={cn("h-5 w-5 shrink-0", active ? "text-brand" : "text-text-3")}
-          strokeWidth={1.8}
+          className={cn("h-[18px] w-[18px] shrink-0", active ? "text-brand-text" : "text-text-3")}
+          strokeWidth={1.9}
           aria-hidden
         />
         <span className="flex-1">{item.label}</span>
@@ -197,13 +223,13 @@ export function AppNav({
       // `visibility` va en la transición a propósito: al cerrar mantiene el
       // cajón visible mientras se desliza y recién entonces lo oculta, que es
       // lo que lo saca del orden de tabulación en móvil.
+      // 060a — Una tarjeta del tema junto a la ventana (antes, la columna azul
+      // marino `.nav-dark`). En el teléfono es el cajón, pegado al borde.
+      data-shell="lateral"
       className={cn(
-        // `text-foreground` explícito: sin él, el texto sin color propio (el
-        // nombre del usuario, el nombre white-label en BrandLogo) hereda el
-        // color YA CALCULADO en <body> con el tema de la página, no el de
-        // `.nav-dark` — y un texto oscuro sobre este fondo oscuro se pierde.
-        "nav-dark fixed inset-y-0 left-0 z-50 flex w-[17rem] shrink-0 flex-col overflow-y-auto border-r bg-subtle px-3 pb-3.5 pt-4 text-foreground transition-[transform,visibility] duration-200",
-        "lg:static lg:visible lg:z-auto lg:w-56 lg:translate-x-0 lg:overflow-visible lg:transition-none",
+        "shell-sidebar fixed inset-y-0 left-0 z-50 flex w-[17rem] shrink-0 flex-col overflow-y-auto px-3 pb-3.5 pt-4 text-foreground transition-[transform,visibility] duration-200",
+        "max-lg:rounded-l-none max-lg:border-l-0",
+        "lg:static lg:visible lg:z-auto lg:w-[16.5rem] lg:translate-x-0 lg:transition-none",
         open ? "visible translate-x-0 shadow-pop" : "invisible -translate-x-full"
       )}
     >
@@ -227,17 +253,39 @@ export function AppNav({
       {/* Grupos con encabezado pequeño, sin letras ni colapsables: se leen
           de arriba abajo como una lista de lo que hay. Un grupo sin título
           (Resultados) es una entrada suelta separada por el espacio. */}
-      <nav className="flex flex-col gap-4" aria-label="Secciones">
-        {groups.map((group, i) => (
-          <div key={group.title ?? i} className="flex flex-col gap-0.5">
-            {group.title && (
-              <span className="kicker mb-1 block px-2.5" aria-hidden>
-                {group.title}
-              </span>
-            )}
-            {group.items.map(renderItem)}
-          </div>
-        ))}
+      {/* 060a — Cada grupo con título se pliega desde su encabezado; el de la
+          pantalla abierta no se puede plegar (se perdería dónde estás). */}
+      <nav className="flex flex-col gap-1.5" aria-label="Secciones">
+        {groups.map((group, i) => {
+          const actual = group.items.some((it) => isNavActive(pathname, it.href));
+          const plegado = Boolean(group.title) && !actual && plegados.includes(group.title!);
+          return (
+            <div key={group.title ?? i} className="flex flex-col gap-0.5">
+              {group.title && (
+                <button
+                  type="button"
+                  onClick={() => plegar(group.title!)}
+                  disabled={actual}
+                  aria-expanded={!plegado}
+                  className="flex w-full items-center gap-2 rounded-[12px] px-2.5 py-2 text-left transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:hover:bg-transparent"
+                >
+                  <span className="kicker flex-1">{group.title}</span>
+                  {!actual && (
+                    <ChevronDown
+                      className={cn(
+                        "h-4 w-4 shrink-0 text-text-3 transition-transform",
+                        !plegado && "rotate-180"
+                      )}
+                      strokeWidth={1.8}
+                      aria-hidden
+                    />
+                  )}
+                </button>
+              )}
+              {!plegado && group.items.map(renderItem)}
+            </div>
+          );
+        })}
       </nav>
 
       <div className="flex-1" />
@@ -250,8 +298,8 @@ export function AppNav({
       {/* Ajustes va abajo, solo: no es trabajo del día. */}
       {renderItem(SETTINGS_ITEM)}
 
-      <div className="mt-1 flex items-center gap-2.5 rounded-sm px-2.5 py-2 hover:bg-accent">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-bold text-brand-text">
+      <div className="mt-2 flex items-center gap-2.5 rounded-[14px] border border-border bg-background px-2.5 py-2 shadow-sm">
+        <span className="avatar-accent flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold">
           {initials(userName)}
         </span>
         <span className="min-w-0 flex-1">
@@ -271,7 +319,8 @@ export function AppNav({
             aria-label={sonido ? "Sonido de mensajes: activado" : "Sonido de mensajes: silenciado"}
             aria-pressed={sonido}
             title={sonido ? "Silenciar el sonido de mensajes nuevos" : "Activar el sonido de mensajes nuevos"}
-            className="rounded p-1 text-text-3 transition-colors hover:text-foreground"
+            // 060a — En escritorio la campana vive en la barra superior.
+            className="rounded p-1 text-text-3 transition-colors hover:text-foreground lg:hidden"
           >
             {sonido ? (
               <Bell className="h-4 w-4" strokeWidth={1.7} />

@@ -248,6 +248,34 @@ describe("tema claro: no cambia", () => {
   });
 });
 
+describe("060a — el lateral es una tarjeta del tema", () => {
+  it("dentro del lateral se lee: texto, secundario y el terciario propio (AA)", () => {
+    for (const vars of [claro, oscuro]) {
+      piso(vars, "--text", "--sidebar-bg", 7);
+      piso(vars, "--text-2", "--sidebar-bg", 4.5);
+      // El kicker de cada grupo (10.5px) y la versión.
+      piso(vars, "--sidebar-text-3", "--sidebar-bg", 4.5);
+    }
+  });
+
+  it("el lateral usa su terciario, no el de la página", () => {
+    // En claro el `--text-3` de la página queda a 2.8:1 sobre este gris.
+    expect(css).toMatch(/\.shell-sidebar \{\s*--text-3: var\(--sidebar-text-3\);/);
+  });
+
+  it("el renglón activo (tarjeta --bg) se lee con la tinta del acento", () => {
+    piso(claro, "--accent-text", "--bg", 4.5);
+    piso(oscuro, "--accent-text", "--bg", 4.5);
+  });
+
+  it("en oscuro, papel < ventana < lateral: cada pieza se despega", () => {
+    arriba(oscuro, "--bg", "--bg-subtle");
+    arriba(oscuro, "--sidebar-bg", "--bg");
+    piso(oscuro, "--sidebar-bg", "--bg-subtle", 1.2);
+    piso(oscuro, "--sidebar-border", "--sidebar-bg", 1.4);
+  });
+});
+
 describe("tinta sobre el acento: blanca solo si pasa AA (≥ 4.5:1)", () => {
   // Presets + colores que un negocio sí elige: un verde (antes 3.3:1 con
   // blanco), un amarillo, un rojo, un morado, un gris y un azul profundo.

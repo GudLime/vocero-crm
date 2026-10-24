@@ -10,13 +10,15 @@ import { AppNav } from "@/components/app-nav";
 import { BrandLogo } from "@/components/brand-mark";
 import { BandaSinConexion } from "@/components/banda-sin-conexion";
 import { AtajosGlobales } from "@/components/atajos-globales";
+import { BarraSuperior } from "@/components/barra-superior";
 
 /**
  * Cascarón de la app en dos modos:
  *
- * - Escritorio (lg+): el panel lateral es una columna fija, como siempre.
+ * - Escritorio (lg+): el panel lateral es una tarjeta fija junto a la ventana
+ *   flotante (060a), que lleva arriba la barra con buscador y campana.
  * - Móvil/tableta: el lateral sale de la izquierda como cajón sobre un velo,
- *   y arriba queda una barra azul marino con el hamburguesa y la marca. El
+ *   y arriba de la ventana queda una barra con el hamburguesa y la marca. El
  *   cajón se cierra solo al navegar (el `pathname` cambia) y con Escape.
  *
  * La altura usa `100dvh` (no `100vh`) porque en el navegador móvil la barra de
@@ -74,7 +76,8 @@ export function AppShell({
   }, [navOpen]);
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-background">
+    // 060a — El papel de fondo con el lateral y la ventana flotando encima.
+    <div className="shell-paper flex h-dvh gap-2 overflow-hidden p-2 sm:gap-3 sm:p-3">
       {navOpen && (
         <button
           aria-label="Cerrar el menú"
@@ -96,20 +99,20 @@ export function AppShell({
         onClose={() => setNavOpen(false)}
       />
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        {/* Misma pieza que la barra lateral (`nav-dark`): en el teléfono la
-            franja azul marino de arriba es lo que queda del bicolor. */}
-        <header className="nav-dark flex h-12 shrink-0 items-center gap-1.5 border-b bg-subtle px-2 text-foreground lg:hidden">
+      <div data-shell="ventana" className="shell-window flex min-w-0 flex-1 flex-col">
+        {/* En el teléfono: el hamburguesa y la marca, dentro de la ventana. */}
+        <header className="flex h-12 shrink-0 items-center gap-1.5 border-b bg-background px-2 lg:hidden">
           <button
             onClick={() => setNavOpen(true)}
             aria-label="Abrir el menú"
             aria-expanded={navOpen}
-            className="rounded-md p-2 text-text-2 hover:bg-accent hover:text-foreground"
+            className="flex min-h-10 min-w-10 items-center justify-center rounded-md text-text-2 transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Menu className="h-5 w-5" strokeWidth={1.8} />
           </button>
           <BrandLogo branding={branding} className="min-w-0" />
         </header>
+        <BarraSuperior branding={branding} userName={userName} />
 
         {aviso}
         {/* 056 — El tiempo real caído se ve desde cualquier pantalla. */}
