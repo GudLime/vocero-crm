@@ -85,8 +85,8 @@ y su lead existen; arrastrar la tarjeta a otra etapa → recargar → la posici�
 1. **Given** un mensaje entrante de un número desconocido, **When** se procesa, **Then**
    se crea el contacto con el nombre del perfil de WhatsApp (editable) y un lead en la
    primera etapa del pipeline.
-2. **Given** el tablero kanban con las etapas sembradas (Nuevo → En conversación →
-   Interesado → Cliente → Perdido), **When** el operador arrastra una tarjeta a otra
+2. **Given** el tablero kanban con las etapas sembradas (Recibido → Contactado →
+   Descubrimiento → Propuesta → Cliente → Perdido), **When** el operador arrastra una tarjeta a otra
    etapa, **Then** el cambio persiste tras recargar la página.
 3. **Given** una tarjeta del kanban, **When** el operador la observa, **Then** muestra
    contacto, última actividad y un enlace directo que abre su conversación en la bandeja.
@@ -402,7 +402,7 @@ Ruta B literalmente (modo de pruebas interno) hasta ver la bandeja funcionando.
 - **FR-010**: Todo remitente nuevo MUST quedar registrado automáticamente como contacto
   (nombre del perfil, editable) con un lead en la primera etapa.
 - **FR-011**: El kanban MUST soportar arrastrar y soltar con persistencia, etapas
-  configurables (sembradas: Nuevo → En conversación → Interesado → Cliente → Perdido) y
+  configurables (sembradas: Recibido → Contactado → Descubrimiento → Propuesta → Cliente → Perdido) y
   anclas de ganado/perdido.
 - **FR-012**: Cada tarjeta MUST mostrar contacto, última actividad y enlace directo a su
   conversación.

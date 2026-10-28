@@ -44,7 +44,7 @@ US1, US2 (MVP gate) → US3, US4, US5, US8 (núcleo P1) → US6 (P2) → US7 (P3
 - [X] T010 drizzle.config.ts + migración inicial generada en drizzle/ (`pnpm db:generate`, `pnpm db:migrate` con drizzle-kit para dev)
 - [X] T011 src/lib/db/index.ts (cliente postgres-js) + src/lib/db/tenant.ts (helpers de scope por organización, obligatorios en toda query de dominio)
 - [X] T012 Better Auth + plugin organization: src/lib/auth/index.ts, src/lib/auth/session.ts (helper requireSession → org activa), src/app/api/auth/[...all]/route.ts
-- [X] T013 Registro crea org + owner + etapas semilla del pipeline (Nuevo→En conversación→Interesado→Cliente[won]→Perdido[lost]) en src/server/auth/on-signup.ts
+- [X] T013 Registro crea org + owner + etapas semilla del pipeline (Recibido→Contactado→Descubrimiento→Propuesta→Cliente[won]→Perdido[lost]) en src/server/auth/on-signup.ts
 - [X] T014 Páginas (auth): src/app/(auth)/login/page.tsx + src/app/(auth)/register/page.tsx
 - [X] T015 Shell autenticado src/app/(app)/layout.tsx: nav lateral (Bandeja, Pipeline, Contactos, Agente, Laboratorio, Configuración), guard de sesión, tema oscuro
 - [X] T016 [P] src/lib/crypto/index.ts — AES-256-GCM (clave 32B desde ENCRYPTION_KEY base64, IV 12B, cipher/iv/tag separados) (DV-VC-05)
@@ -90,9 +90,9 @@ US1, US2 (MVP gate) → US3, US4, US5, US8 (núcleo P1) → US6 (P2) → US7 (P3
 
 **Goal**: contacto+lead auto-registrados al primer mensaje; kanban drag&drop persistente
 
-**Independent Test**: inbound de número nuevo → aparece en Contactos y como card en "Nuevo"; arrastrar a otra etapa → persiste tras recargar
+**Independent Test**: inbound de número nuevo → aparece en Contactos y como card en "Recibido"; arrastrar a otra etapa → persiste tras recargar
 
-- [X] T039 [US2] Auto-registro de lead en primera conversación (etapa "Nuevo", position al final) integrado en src/server/inbox/ingest.ts
+- [X] T039 [US2] Auto-registro de lead en primera conversación (etapa "Recibido", position al final) integrado en src/server/inbox/ingest.ts
 - [X] T040 [US2] APIs contactos: GET (?q= busca nombre/teléfono) / POST / PATCH (notas, archivar) en src/app/api/contacts/
 - [X] T041 [US2] APIs pipeline: CRUD etapas (DELETE exige moveTo; anclas won/lost no borrables), PATCH /api/pipeline/leads/[id] {stageId, position} en src/app/api/pipeline/
 - [X] T042 [P] [US2] UI contactos src/app/(app)/contacts/ — tabla con búsqueda, edición de notas, archivar, link a conversación

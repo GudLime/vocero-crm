@@ -78,8 +78,8 @@ las etapas de esa organización. Sin elección, no se emite `QualifiedLead`.
 **Contra qué**: (a) cablear el nombre "Calificado"; (b) inferirlo por posición;
 (c) un `kind` nuevo en `pipeline_stage`.
 
-**Por qué**: las etapas sembradas de Vocero son Nuevo / En conversación /
-Interesado / Cliente / Perdido — **no hay ninguna llamada "Calificado"**, y cada
+**Por qué**: las etapas sembradas son Recibido / Contactado /
+Descubrimiento / Propuesta / Cliente / Perdido — **no hay ninguna llamada "Calificado"**, y cada
 negocio renombra las suyas. Inferir por posición adivina. Un `kind` nuevo obliga
 a migrar el enum y a decidir por el usuario. Un `stage_id` elegido es explícito,
 reversible y no toca el modelo del pipeline.

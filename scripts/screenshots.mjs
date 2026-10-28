@@ -155,7 +155,7 @@ await shoot("/inbox", "bandeja.png", async () => {
 });
 
 await shoot("/pipeline", "pipeline.png", async () => {
-  await page.getByText("Interesado").first().waitFor();
+  await page.getByText("Propuesta").first().waitFor();
   await page.getByText("María Fernanda López").first().waitFor();
 });
 

@@ -41,7 +41,7 @@ UNIQUE `(organization_id, phone)`. Avatar = iniciales + color estable derivado d
 | kind | text NOT NULL default 'open' | `open` \| `won` \| `lost` (anclas) |
 | created_at / updated_at | | |
 
-Seed: Nuevo → En conversación → Interesado → Cliente(won) → Perdido(lost). Regla: no se
+Seed: Recibido → Contactado → Descubrimiento → Propuesta → Cliente(won) → Perdido(lost). Regla: no se
 puede eliminar la última etapa `won` ni la última `lost`; eliminar etapa con leads exige
 etapa destino.
 

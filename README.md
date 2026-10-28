@@ -85,7 +85,7 @@ también. Si la persona vuelve a escribir, el agente empieza de cero.
 ### 📊 Contactos y pipeline kanban
 
 Cada persona que escribe queda registrada sola y entra al pipeline
-(Nuevo → En conversación → Interesado → Cliente → Perdido, editable). Arrastra
+(Recibido → Contactado → Descubrimiento → Propuesta → Cliente → Perdido, editable). Arrastra
 tarjetas, busca, agrega notas, archiva.
 
 ### 🎯 Resultados

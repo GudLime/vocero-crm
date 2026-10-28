@@ -10,14 +10,14 @@
    ✅ Los remitentes de US1 ("Cliente E2E", "Cliente Frio") existen como
    contactos con su nombre de perfil y teléfono.
 2. Abrir `/pipeline`.
-   ✅ Cada contacto tiene su tarjeta en la etapa "Nuevo" con última actividad.
+   ✅ Cada contacto tiene su tarjeta en la etapa "Recibido" con última actividad.
 
 ## Kanban (FR-011/FR-012)
 
-3. Arrastrar la tarjeta "Cliente E2E" de "Nuevo" a "En conversación".
+3. Arrastrar la tarjeta "Cliente E2E" de "Recibido" a "Contactado".
    ✅ La tarjeta cambia de columna.
 4. Recargar la página.
-   ✅ La tarjeta sigue en "En conversación" (persistencia).
+   ✅ La tarjeta sigue en "Contactado" (persistencia).
 5. La tarjeta muestra contacto + última actividad + enlace que abre su
    conversación en la bandeja (`/inbox?contact=...`).
 

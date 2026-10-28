@@ -20,9 +20,14 @@ import { etiquetaVence, porVencer } from "@/lib/filtros-bandeja";
 /* Puntos de etapa: los tokens del tema, no hex copiados del tema claro —
    así siguen al acento white-label y se recalculan en oscuro. */
 const STAGE_DOT: Record<string, string> = {
+  // Semilla anterior, por si la org ya existía, y la de GudLime.
   Nuevo: "var(--text-3)",
+  Recibido: "var(--text-3)",
   "En conversación": "var(--accent)",
+  Contactado: "var(--accent)",
   Interesado: "var(--warning)",
+  Descubrimiento: "var(--warning)",
+  Propuesta: "var(--accent-text)",
   Cliente: "var(--success)",
   Perdido: "var(--danger)",
 };

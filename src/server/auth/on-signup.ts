@@ -2,11 +2,17 @@ import { count, eq, sql } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db";
 import { newId } from "@/lib/db/ids";
 
-/** Etapas sembradas del pipeline (US2). */
+/**
+ * Etapas sembradas del pipeline (US2).
+ * Nombres de GudLime para este fork: Recibido → Contactado →
+ * Descubrimiento → Propuesta. Cliente sigue siendo la etapa ganada
+ * (igual que aguas arriba) y Perdido no se toca.
+ */
 const SEED_STAGES: { name: string; kind: "open" | "won" | "lost" }[] = [
-  { name: "Nuevo", kind: "open" },
-  { name: "En conversación", kind: "open" },
-  { name: "Interesado", kind: "open" },
+  { name: "Recibido", kind: "open" },
+  { name: "Contactado", kind: "open" },
+  { name: "Descubrimiento", kind: "open" },
+  { name: "Propuesta", kind: "open" },
   { name: "Cliente", kind: "won" },
   { name: "Perdido", kind: "lost" },
 ];
