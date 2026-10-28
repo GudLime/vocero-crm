@@ -10,6 +10,7 @@ import { getBranding } from "@/server/branding";
 import { enabledChannels } from "@/server/channels/enabled";
 import { productName } from "@/lib/channels";
 import "./globals.css";
+import "./gudlime-theme.css"; // Gudlime base theme (radii/shadows/neutrals; accent/logo stay white-label)
 
 // Las voces de la marca. next/font las descarga en BUILD y las sirve
 // self-hosted (sin CDN en runtime: soberanía). 061 — La interfaz va en
@@ -83,7 +84,7 @@ export default async function RootLayout({
   // 062 · D6 — La apariencia (tema, letra, tamaño y densidad) se resuelve en
   // el servidor: el primer pintado ya la trae, sin parpadeo.
   const { apariencia } = await aparienciaActual().catch(() => ({
-    apariencia: { tema: "menta", letra: "urbanist", tamano: "normal", densidad: "normal" } as const,
+    apariencia: { tema: "menta", letra: "inter", tamano: "normal", densidad: "normal" } as const,
   }));
   return (
     <html
