@@ -1,1 +1,1 @@
-PLACEHOLDER
+file:///tmp/src_lib_temas.ts
