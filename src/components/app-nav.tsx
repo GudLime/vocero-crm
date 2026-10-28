@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AlertTriangle, Bell, BellOff, LogOut, X } from "lucide-react";
-import { BrandTile } from "@/components/brand-mark";
+import { BrandLogo } from "@/components/brand-mark";
 import { BotonInstalar } from "@/components/pwa";
 import { BotonActivarAvisos } from "@/components/activar-avisos";
 import { limpiarBorradores } from "@/lib/borradores";
@@ -41,7 +41,6 @@ import {
   urlDeConversacion,
 } from "@/lib/avisos-sistema";
 import { appIconHref } from "@/lib/pwa";
-import { BrandLogo } from "@/components/brand-mark";
 import {
   BUILD_COMMIT,
   UNVERIFIED_COMMIT_NOTE,
@@ -381,9 +380,9 @@ export function AppNav({
 }
 
 /**
- * 061 · D2 — El riel de iconos del escritorio: la marca arriba, las mismas
- * entradas del menú (según rol y banderas) como botones redondos, y abajo la
- * campana, Ajustes y la cuenta. La activa va rellena con la tinta del tema.
+ * Gudlime — Sidebar de escritorio con icono + label (estilo admin Gadr /
+ * Notion), en lugar del riel de solo iconos de Vocero upstream.
+ * Ancho w-56; activo = acento sólido con texto claro.
  */
 function Riel({
   branding,
@@ -434,20 +433,28 @@ function Riel({
       <Link
         key={item.href}
         href={item.href}
-        aria-label={item.label}
-        title={item.label}
         aria-current={active ? "page" : undefined}
         className={cn(
-          "relative flex h-11 w-11 items-center justify-center rounded-full border transition-colors",
+          "relative flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-[13.5px] font-semibold transition-colors",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
           active
-            ? "border-transparent bg-riel-activo text-riel-activo-texto"
-            : "border-border-strong text-text-2 hover:bg-accent hover:text-foreground"
+            ? "bg-brand text-brand-fg"
+            : "text-text-2 hover:bg-accent hover:text-foreground"
         )}
       >
-        <item.icon className="h-[19px] w-[19px]" strokeWidth={1.8} aria-hidden />
+        <item.icon
+          className={cn("h-5 w-5 shrink-0", active ? "text-brand-fg" : "text-text-3")}
+          strokeWidth={1.8}
+          aria-hidden
+        />
+        <span className="min-w-0 flex-1 truncate">{item.label}</span>
         {item.badge && unread > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand px-1 text-[10px] font-bold text-brand-fg">
+          <span
+            className={cn(
+              "flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1.5 text-[10.5px] font-bold",
+              active ? "bg-brand-veil text-brand-fg" : "bg-brand text-brand-fg"
+            )}
+          >
             {unread > 99 ? "99+" : unread}
           </span>
         )}
@@ -458,21 +465,33 @@ function Riel({
   return (
     <nav
       aria-label="Secciones"
-      className="tarjeta hidden w-[76px] shrink-0 flex-col items-center py-4 lg:flex"
+      className="tarjeta hidden w-56 shrink-0 flex-col px-3 py-4 lg:flex"
     >
-      <Link href="/inbox" aria-label={branding.name} title={branding.name} className="rounded-[14px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-        <BrandTile branding={branding} className="h-11 w-11 rounded-[14px] text-[18px]" />
+      <Link
+        href="/inbox"
+        aria-label={branding.name}
+        title={branding.name}
+        className="rounded-md px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <BrandLogo branding={branding} />
       </Link>
-      <div className="mt-7 flex min-h-0 flex-1 flex-col items-center gap-2.5 overflow-y-auto">
+      <div className="mt-6 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
         {groups.map((g, i) => (
-          <div key={g.title ?? i} className="flex flex-col items-center gap-2.5">
-            {i > 0 && <span className="my-0.5 h-px w-6 bg-border" aria-hidden />}
+          <div key={g.title ?? i} className="flex flex-col gap-0.5">
+            {g.title && (
+              <span className="kicker mb-1 block px-2.5" aria-hidden>
+                {g.title}
+              </span>
+            )}
             {g.items.map(boton)}
           </div>
         ))}
       </div>
-      <div className="mt-3 flex flex-col items-center gap-2.5">
-        <span className="flex h-11 w-11 items-center justify-center">{campana}</span>
+      <div className="mt-3 flex flex-col gap-0.5 border-t border-border pt-3">
+        <div className="flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13.5px] font-semibold text-text-2">
+          {campana}
+          <span className="min-w-0 flex-1 truncate">Avisos</span>
+        </div>
         {boton(SETTINGS_ITEM)}
         <div ref={cuentaRef} className="relative">
           <button
@@ -482,9 +501,19 @@ function Riel({
             aria-expanded={cuenta}
             aria-haspopup="dialog"
             title={userName}
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-riel-activo text-[13px] font-bold text-riel-activo-texto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            {initials(userName)}
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-bold text-brand-text">
+              {initials(userName)}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[13px] font-semibold text-foreground">
+                {userName}
+              </span>
+              <span className="block truncate text-[11px] text-text-3">
+                {role === "owner" ? "Propietario" : "Equipo"}
+              </span>
+            </span>
           </button>
           {cuenta && (
             <div
