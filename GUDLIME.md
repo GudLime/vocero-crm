@@ -6,7 +6,9 @@ por la agencia Gudlime para todas las instancias de CRM-as-a-service.
 ## Cambios respecto a upstream
 
 1. **`src/app/gudlime-theme.css`** — override del look (radios chicos, sombras
-   mínimas, neutros slate). No toca `--accent*` ni el logo.
+   mínimas, neutros slate). No toca `--accent*` ni el logo. El hilo de la
+   Bandeja (`.thread-bg`) es un plano de `--accent-tint` (el lavado que ya
+   inyecta la marca), sin el mosaico de dibujos de `globals.css`.
 2. **`src/app/layout.tsx`** — una línea: `import "./gudlime-theme.css"` después
    de `globals.css`.
 3. **`src/lib/temas.ts`** — `APARIENCIA_POR_DEFECTO.letra = "inter"`.
