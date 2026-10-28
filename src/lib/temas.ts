@@ -1,1 +1,1 @@
-@/tmp/src_lib_temas.ts
+LOADING_FROM_FILE
