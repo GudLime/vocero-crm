@@ -1,1 +1,1 @@
-file:///tmp/src_lib_temas.ts
+@/tmp/src_lib_temas.ts
